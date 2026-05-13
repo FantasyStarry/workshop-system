@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.workshop.module.production.mapper.ProductionRecordMapper">
+
+    <select id="pageQuery" resultType="com.workshop.module.production.entity.ProductionRecord">
+        SELECT pr.* FROM production_records pr
+        <where>
+            <if test="qrCodeId != null">
+                AND pr.qr_code_id = #{qrCodeId}
+            </if>
+            <if test="stageId != null">
+                AND pr.stage_id = #{stageId}
+            </if>
+            <if test="operatorId != null">
+                AND pr.operator_id = #{operatorId}
+            </if>
+            <if test="orderId != null">
+                AND pr.order_item_id IN (
+                    SELECT id FROM order_items WHERE order_id = #{orderId}
+                )
+            </if>
+            <if test="startDate != null and startDate != ''">
+                AND pr.scan_time >= #{startDate}
+            </if>
+            <if test="endDate != null and endDate != ''">
+                AND pr.scan_time &lt;= #{endDate}
+            </if>
+        </where>
+        ORDER BY pr.created_at DESC
+        LIMIT #{offset}, #{size}
+    </select>
+
+    <select id="countQuery" resultType="long">
+        SELECT COUNT(*) FROM production_records pr
+        <where>
+            <if test="qrCodeId != null">
+                AND pr.qr_code_id = #{qrCodeId}
+            </if>
+            <if test="stageId != null">
+                AND pr.stage_id = #{stageId}
+            </if>
+            <if test="operatorId != null">
+                AND pr.operator_id = #{operatorId}
+            </if>
+            <if test="orderId != null">
+                AND pr.order_item_id IN (
+                    SELECT id FROM order_items WHERE order_id = #{orderId}
+                )
+            </if>
+            <if test="startDate != null and startDate != ''">
+                AND pr.scan_time >= #{startDate}
+            </if>
+            <if test="endDate != null and endDate != ''">
+                AND pr.scan_time &lt;= #{endDate}
+            </if>
+        </where>
+    </select>
+
+</mapper>

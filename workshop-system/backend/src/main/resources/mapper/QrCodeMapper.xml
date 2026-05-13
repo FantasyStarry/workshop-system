@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.workshop.module.production.mapper.QrCodeMapper">
+
+    <select id="pageQuery" resultType="com.workshop.module.production.entity.QrCode">
+        SELECT * FROM qr_codes
+        <where>
+            <if test="orderItemId != null">
+                AND order_item_id = #{orderItemId}
+            </if>
+            <if test="productId != null">
+                AND product_id = #{productId}
+            </if>
+            <if test="status != null">
+                AND status = #{status}
+            </if>
+        </where>
+        ORDER BY created_at DESC
+        LIMIT #{offset}, #{size}
+    </select>
+
+    <select id="countQuery" resultType="long">
+        SELECT COUNT(*) FROM qr_codes
+        <where>
+            <if test="orderItemId != null">
+                AND order_item_id = #{orderItemId}
+            </if>
+            <if test="productId != null">
+                AND product_id = #{productId}
+            </if>
+            <if test="status != null">
+                AND status = #{status}
+            </if>
+        </where>
+    </select>
+
+</mapper>
