@@ -182,7 +182,7 @@ const OrderFormPage: React.FC = () => {
     switch (current) {
       case 0:
         return (
-          <Form form={form} layout="vertical">
+          <>
             <Form.Item name="customerName" label="客户名称" rules={[{ required: true, message: '请输入客户名称' }]}>
               <Input placeholder="请输入客户名称" />
             </Form.Item>
@@ -201,7 +201,7 @@ const OrderFormPage: React.FC = () => {
             <Form.Item name="remark" label="备注">
               <TextArea rows={3} placeholder="请输入备注" />
             </Form.Item>
-          </Form>
+          </>
         );
       case 1:
         return (
@@ -308,7 +308,9 @@ const OrderFormPage: React.FC = () => {
   return (
     <Card>
       <Steps current={current} items={steps} style={{ marginBottom: 32 }} />
-      {renderStepContent()}
+      <Form form={form} layout="vertical">
+        {renderStepContent()}
+      </Form>
       <div style={{ marginTop: 24, textAlign: 'center' }}>
         <Space>
           {current > 0 && (

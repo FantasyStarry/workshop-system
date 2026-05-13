@@ -20,7 +20,9 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -85,15 +87,34 @@ public class OrderServiceImpl implements OrderService {
             throw new BusinessException(400, "客户名称不能为空");
         }
 
+        // 手动解析日期（避免 Jackson 反序列化兼容问题）
+        DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+        DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+
+        LocalDateTime orderDate;
+        try {
+            orderDate = LocalDateTime.parse(dto.getOrderDate(), dateTimeFormatter);
+        } catch (Exception e) {
+            throw new BusinessException(400, "下单日期格式错误，期望 yyyy-MM-dd HH:mm:ss");
+        }
+
+        LocalDate deliveryDate = null;
+        if (StringUtils.hasText(dto.getDeliveryDate())) {
+            try {
+                deliveryDate = LocalDate.parse(dto.getDeliveryDate(), dateFormatter);
+            } catch (Exception e) {
+                throw new BusinessException(400, "交付日期格式错误，期望 yyyy-MM-dd");
+            }
+        }
+
         Order order = new Order();
         order.setOrderNo(codeGenerator.generateOrderNo());
         order.setCustomerName(dto.getCustomerName());
         order.setCustomerContact(dto.getCustomerContact());
         order.setCustomerPhone(dto.getCustomerPhone());
         order.setCustomerAddress(dto.getCustomerAddress());
-        // orderDate 兜底：如果前端未传，默认当前时间
-        order.setOrderDate(dto.getOrderDate() != null ? dto.getOrderDate() : LocalDateTime.now());
-        order.setDeliveryDate(dto.getDeliveryDate());
+        order.setOrderDate(orderDate);
+        order.setDeliveryDate(deliveryDate != null ? deliveryDate.atStartOfDay() : null);
         order.setTotalAmount(dto.getTotalAmount() != null ? dto.getTotalAmount() : BigDecimal.ZERO);
         order.setRemark(dto.getRemark());
         order.setStatus(0); // PENDING
