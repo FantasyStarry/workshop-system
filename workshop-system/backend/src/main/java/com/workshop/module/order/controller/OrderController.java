@@ -49,10 +49,10 @@ public class OrderController {
     }
 
     @PostMapping
-    public Result<?> create(@RequestBody OrderCreateDTO dto, HttpServletRequest request) {
+    public Result<Long> create(@RequestBody OrderCreateDTO dto, HttpServletRequest request) {
         Long userId = (Long) request.getAttribute("userId");
-        orderService.create(dto, userId);
-        return Result.ok();
+        Long orderId = orderService.create(dto, userId);
+        return Result.ok(orderId);
     }
 
     @PutMapping("/{id}")

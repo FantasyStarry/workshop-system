@@ -10,7 +10,7 @@ import java.util.Map;
 public interface OrderService {
     Page<Order> pageQuery(Page<Order> page, OrderPageDTO dto);
     Map<String, Object> getDetail(Long id);
-    void create(OrderCreateDTO dto, Long userId);
+    Long create(OrderCreateDTO dto, Long userId);
     void update(Order order);
     void updateStatus(Long id, Integer status);
     void delete(Long id);

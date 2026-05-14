@@ -81,7 +81,7 @@ public class OrderServiceImpl implements OrderService {
 
     @Override
     @Transactional
-    public void create(OrderCreateDTO dto, Long userId) {
+    public Long create(OrderCreateDTO dto, Long userId) {
         // 校验必填字段
         if (!StringUtils.hasText(dto.getCustomerName())) {
             throw new BusinessException(400, "客户名称不能为空");
@@ -135,6 +135,8 @@ public class OrderServiceImpl implements OrderService {
                 orderItemMapper.insert(item);
             }
         }
+
+        return order.getId();
     }
 
     @Override

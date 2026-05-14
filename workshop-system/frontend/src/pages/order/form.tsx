@@ -60,8 +60,10 @@ const OrderFormPage: React.FC = () => {
     try {
       const res = await getProductPage({ page: 1, pageSize: 1000 });
       setProducts(res.data.records.filter((p) => p.status === 1));
-    } catch {
-      // handled
+    } catch (err: any) {
+      if (err?.message) {
+        message.error(err.message);
+      }
     } finally {
       setProductLoading(false);
     }
@@ -146,11 +148,11 @@ const OrderFormPage: React.FC = () => {
       let orderId: number;
       if (isEdit) {
         orderData.id = Number(id);
-        const res = await updateOrder(orderData);
-        orderId = res.data.id;
+        await updateOrder(orderData);
+        orderId = Number(id);
       } else {
         const res = await createOrder(orderData);
-        orderId = res.data.id;
+        orderId = res.data as unknown as number;
       }
 
       // Save order items
@@ -171,113 +173,110 @@ const OrderFormPage: React.FC = () => {
 
       message.success(isEdit ? '更新成功' : '创建成功');
       navigate('/orders');
-    } catch {
-      // handled
+    } catch (err: any) {
+      if (err?.message) {
+        message.error(err.message);
+      }
     } finally {
       setLoading(false);
     }
   };
 
   const renderStepContent = () => {
-    switch (current) {
-      case 0:
-        return (
-          <>
-            <Form.Item name="customerName" label="客户名称" rules={[{ required: true, message: '请输入客户名称' }]}>
-              <Input placeholder="请输入客户名称" />
-            </Form.Item>
-            <Form.Item name="customerContact" label="联系人">
-              <Input placeholder="请输入联系人" />
-            </Form.Item>
-            <Form.Item name="customerPhone" label="联系电话">
-              <Input placeholder="请输入联系电话" />
-            </Form.Item>
-            <Form.Item name="customerAddress" label="客户地址">
-              <Input placeholder="请输入客户地址" />
-            </Form.Item>
-            <Form.Item name="deliveryDate" label="交付日期">
-              <DatePicker style={{ width: '100%' }} />
-            </Form.Item>
-            <Form.Item name="remark" label="备注">
-              <TextArea rows={3} placeholder="请输入备注" />
-            </Form.Item>
-          </>
-        );
-      case 1:
-        return (
-          <div>
-            <Select
-              showSearch
-              placeholder="搜索并添加产品"
-              filterOption={(input, option) =>
-                (option?.label as string)?.toLowerCase().includes(input.toLowerCase())
-              }
-              options={products.map((p) => ({
-                label: `${p.productCode} - ${p.productName}`,
-                value: p.id,
-              }))}
-              onChange={handleAddProduct}
-              style={{ width: '100%', marginBottom: 16 }}
-              loading={productLoading}
-              value={undefined}
-            />
-            <Table
-              dataSource={selectedProducts}
-              rowKey="productId"
-              pagination={false}
-              columns={[
-                { title: '产品编号', dataIndex: 'productCode', width: 120 },
-                { title: '产品名称', dataIndex: 'productName', width: 150 },
-                {
-                  title: '数量',
-                  dataIndex: 'quantity',
-                  width: 100,
-                  render: (val: number, record: OrderItem) => (
-                    <InputNumber
-                      min={1}
-                      value={val}
-                      onChange={(v) => handleQuantityChange(record.productId, v || 1)}
-                    />
-                  ),
-                },
-                {
-                  title: '单价',
-                  dataIndex: 'unitPrice',
-                  width: 120,
-                  render: (val: number, record: OrderItem) => (
-                    <InputNumber
-                      min={0}
-                      precision={2}
-                      prefix="¥"
-                      value={val}
-                      onChange={(v) => handlePriceChange(record.productId, v || 0)}
-                    />
-                  ),
-                },
-                {
-                  title: '小计',
-                  dataIndex: 'subtotal',
-                  width: 120,
-                  render: (val: number) => `¥${(val || 0).toFixed(2)}`,
-                },
-                {
-                  title: '操作',
-                  width: 80,
-                  render: (_: any, record: OrderItem) => (
-                    <Button danger size="small" onClick={() => handleRemoveProduct(record.productId)}>
-                      移除
-                    </Button>
-                  ),
-                },
-              ]}
-            />
-            <div style={{ textAlign: 'right', marginTop: 16, fontSize: 16, fontWeight: 'bold' }}>
-              总计：¥{selectedProducts.reduce((s, p) => s + p.subtotal, 0).toFixed(2)}
-            </div>
+    const hiddenStyle = { display: 'none' };
+    return (
+      <>
+        <div style={current === 0 ? undefined : hiddenStyle}>
+          <Form.Item name="customerName" label="客户名称" rules={[{ required: true, message: '请输入客户名称' }]}>
+            <Input placeholder="请输入客户名称" />
+          </Form.Item>
+          <Form.Item name="customerContact" label="联系人">
+            <Input placeholder="请输入联系人" />
+          </Form.Item>
+          <Form.Item name="customerPhone" label="联系电话">
+            <Input placeholder="请输入联系电话" />
+          </Form.Item>
+          <Form.Item name="customerAddress" label="客户地址">
+            <Input placeholder="请输入客户地址" />
+          </Form.Item>
+          <Form.Item name="deliveryDate" label="交付日期">
+            <DatePicker style={{ width: '100%' }} />
+          </Form.Item>
+          <Form.Item name="remark" label="备注">
+            <TextArea rows={3} placeholder="请输入备注" />
+          </Form.Item>
+        </div>
+        <div style={current === 1 ? undefined : hiddenStyle}>
+          <Select
+            showSearch
+            placeholder="搜索并添加产品"
+            filterOption={(input, option) =>
+              (option?.label as string)?.toLowerCase().includes(input.toLowerCase())
+            }
+            options={products.map((p) => ({
+              label: `${p.productCode} - ${p.productName}`,
+              value: p.id,
+            }))}
+            onChange={handleAddProduct}
+            style={{ width: '100%', marginBottom: 16 }}
+            loading={productLoading}
+            value={undefined}
+          />
+          <Table
+            dataSource={selectedProducts}
+            rowKey="productId"
+            pagination={false}
+            columns={[
+              { title: '产品编号', dataIndex: 'productCode', width: 120 },
+              { title: '产品名称', dataIndex: 'productName', width: 150 },
+              {
+                title: '数量',
+                dataIndex: 'quantity',
+                width: 100,
+                render: (val: number, record: OrderItem) => (
+                  <InputNumber
+                    min={1}
+                    value={val}
+                    onChange={(v) => handleQuantityChange(record.productId, v || 1)}
+                  />
+                ),
+              },
+              {
+                title: '单价',
+                dataIndex: 'unitPrice',
+                width: 120,
+                render: (val: number, record: OrderItem) => (
+                  <InputNumber
+                    min={0}
+                    precision={2}
+                    prefix="¥"
+                    value={val}
+                    onChange={(v) => handlePriceChange(record.productId, v || 0)}
+                  />
+                ),
+              },
+              {
+                title: '小计',
+                dataIndex: 'subtotal',
+                width: 120,
+                render: (val: number) => `¥${(val || 0).toFixed(2)}`,
+              },
+              {
+                title: '操作',
+                width: 80,
+                render: (_: any, record: OrderItem) => (
+                  <Button danger size="small" onClick={() => handleRemoveProduct(record.productId)}>
+                    移除
+                  </Button>
+                ),
+              },
+            ]}
+          />
+          <div style={{ textAlign: 'right', marginTop: 16, fontSize: 16, fontWeight: 'bold' }}>
+            总计：¥{selectedProducts.reduce((s, p) => s + p.subtotal, 0).toFixed(2)}
           </div>
-        );
-      case 2:
-        return (
+        </div>
+        <div style={current === 2 ? undefined : hiddenStyle}>
           <Card title="订单确认">
             <div style={{ marginBottom: 16 }}>
               <strong>客户信息：</strong>
@@ -299,10 +298,9 @@ const OrderFormPage: React.FC = () => {
               订单总额：¥{selectedProducts.reduce((s, p) => s + p.subtotal, 0).toFixed(2)}
             </div>
           </Card>
-        );
-      default:
-        return null;
-    }
+        </div>
+      </>
+    );
   };
 
   return (
