@@ -42,6 +42,14 @@ public class OrderServiceImpl implements OrderService {
     @Autowired
     private CodeGenerator codeGenerator;
 
+    private synchronized String generateOrderNo() {
+        String today = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyyMMdd"));
+        String prefix = "ORD" + today;
+        Integer maxSeq = orderMapper.getMaxOrderSeq(prefix);
+        int seq = (maxSeq != null ? maxSeq : 0) + 1;
+        return prefix + String.format("%03d", seq);
+    }
+
     @Override
     public Page<Order> pageQuery(Page<Order> page, OrderPageDTO dto) {
         long offset = (page.getCurrent() - 1) * page.getSize();
@@ -108,7 +116,7 @@ public class OrderServiceImpl implements OrderService {
         }
 
         Order order = new Order();
-        order.setOrderNo(codeGenerator.generateOrderNo());
+        order.setOrderNo(generateOrderNo());
         order.setCustomerName(dto.getCustomerName());
         order.setCustomerContact(dto.getCustomerContact());
         order.setCustomerPhone(dto.getCustomerPhone());
