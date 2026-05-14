@@ -16,8 +16,8 @@ public class OrderItemController {
     private OrderItemService orderItemService;
 
     @GetMapping
-    public Result<List<OrderItem>> list(@PathVariable Long orderId) {
-        return Result.ok(orderItemService.getByOrderId(orderId));
+    public Result<List<com.workshop.module.order.dto.OrderItemResponseDTO>> list(@PathVariable Long orderId) {
+        return Result.ok(((com.workshop.module.order.service.impl.OrderItemServiceImpl)orderItemService).getWithProductInfo(orderId));
     }
 
     @PostMapping

@@ -11,7 +11,7 @@ import java.util.List;
 
 public interface QrCodeService {
     List<QrCode> generate(QrCodeGenerateDTO dto, Long userId);
-    Page<QrCode> pageQuery(Page<QrCode> page, Long orderItemId, Long productId, Integer status);
+    Page<QrCode> pageQuery(Page<QrCode> page, Long orderId, Long orderItemId, Long productId, Integer status);
     QrCode getById(Long id);
     QrCodeDecodeResultDTO decode(String qrContent);
     QrCode getByContent(String qrContent);

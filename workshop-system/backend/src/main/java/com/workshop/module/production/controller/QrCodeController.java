@@ -43,12 +43,13 @@ public class QrCodeController {
     public Result<PageResult<QrCode>> page(
             @RequestParam(defaultValue = "1") long page,
             @RequestParam(defaultValue = "10") long pageSize,
+            @RequestParam(required = false) Long orderId,
             @RequestParam(required = false) Long orderItemId,
             @RequestParam(required = false) Long productId,
             @RequestParam(required = false) Integer status) {
 
         Page<QrCode> pageParam = new Page<>(page, pageSize);
-        Page<QrCode> result = qrCodeService.pageQuery(pageParam, orderItemId, productId, status);
+        Page<QrCode> result = qrCodeService.pageQuery(pageParam, orderId, orderItemId, productId, status);
 
         return Result.ok(new PageResult<>(result.getRecords(), result.getTotal(), result.getCurrent(), result.getSize()));
     }

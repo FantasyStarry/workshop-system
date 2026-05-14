@@ -12,11 +12,13 @@ public interface QrCodeMapper extends BaseMapper<QrCode> {
 
     List<QrCode> pageQuery(@Param("offset") long offset,
                            @Param("size") long size,
+                           @Param("orderId") Long orderId,
                            @Param("orderItemId") Long orderItemId,
                            @Param("productId") Long productId,
                            @Param("status") Integer status);
 
-    long countQuery(@Param("orderItemId") Long orderItemId,
+    long countQuery(@Param("orderId") Long orderId,
+                    @Param("orderItemId") Long orderItemId,
                     @Param("productId") Long productId,
                     @Param("status") Integer status);
 }

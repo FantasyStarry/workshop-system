@@ -65,9 +65,18 @@ public class QrCodeServiceImpl implements QrCodeService {
             throw new BusinessException(404, "产品不存在");
         }
 
-        // 2. Loop quantity times to generate QR codes
+        // 2. Check if QR code already generated for this order
+        LambdaQueryWrapper<QrCode> existsWrapper = new LambdaQueryWrapper<>();
+        existsWrapper.eq(QrCode::getOrderItemId, dto.getOrderItemId());
+        long count = qrCodeMapper.selectCount(existsWrapper);
+        if (count > 0) {
+            throw new BusinessException(400, "该订单产品已生成过二维码，不能重复生成");
+        }
+
+        // 3. Generate QR codes based on orderItem quantity (fixed quantity)
         List<QrCode> result = new ArrayList<>();
-        for (int i = 0; i < dto.getQuantity(); i++) {
+        int fixedQuantity = orderItem.getQuantity() != null ? orderItem.getQuantity() : 1;
+        for (int i = 0; i < fixedQuantity; i++) {
             // a. Generate serial number (query max serial_no for same orderItemId + current time window)
             Integer maxSerialNo = getMaxSerialNo(dto.getOrderItemId());
             int serialNo = maxSerialNo + 1;
@@ -93,11 +102,11 @@ public class QrCodeServiceImpl implements QrCodeService {
             result.add(qrCode);
         }
 
-        // 3. Update orderItem.productionStatus to IN_PRODUCTION
+        // 4. Update orderItem.productionStatus to IN_PRODUCTION
         orderItem.setProductionStatus(1); // IN_PRODUCTION
         orderItemMapper.updateById(orderItem);
 
-        // 4. Update order.status to IN_PRODUCTION
+        // 5. Update order.status to IN_PRODUCTION
         order.setStatus(1); // IN_PRODUCTION
         orderMapper.updateById(order);
 
@@ -121,10 +130,10 @@ public class QrCodeServiceImpl implements QrCodeService {
     }
 
     @Override
-    public Page<QrCode> pageQuery(Page<QrCode> page, Long orderItemId, Long productId, Integer status) {
+    public Page<QrCode> pageQuery(Page<QrCode> page, Long orderId, Long orderItemId, Long productId, Integer status) {
         long offset = (page.getCurrent() - 1) * page.getSize();
-        List<QrCode> records = qrCodeMapper.pageQuery(offset, page.getSize(), orderItemId, productId, status);
-        long total = qrCodeMapper.countQuery(orderItemId, productId, status);
+        List<QrCode> records = qrCodeMapper.pageQuery(offset, page.getSize(), orderId, orderItemId, productId, status);
+        long total = qrCodeMapper.countQuery(orderId, orderItemId, productId, status);
         page.setRecords(records);
         page.setTotal(total);
         return page;

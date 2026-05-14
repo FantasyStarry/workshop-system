@@ -20,12 +20,12 @@ const QrCodePage: React.FC = () => {
   const [orderItems, setOrderItems] = useState<OrderItem[]>([]);
   const [selectedOrderId, setSelectedOrderId] = useState<number | undefined>();
   const [selectedItemId, setSelectedItemId] = useState<number | undefined>();
-  const [quantity, setQuantity] = useState(10);
   const [generating, setGenerating] = useState(false);
   const [qrCodes, setQrCodes] = useState<QrCode[]>([]);
   const [qrcodeLoading, setQrCodeLoading] = useState(false);
   const [imageModalOpen, setImageModalOpen] = useState(false);
   const [selectedQrCodeId, setSelectedQrCodeId] = useState<number>(0);
+  const [generatedItemIds, setGeneratedItemIds] = useState<Set<number>>(new Set());
 
   useEffect(() => {
     loadOrders();
@@ -58,11 +58,13 @@ const QrCodePage: React.FC = () => {
     }
     setGenerating(true);
     try {
-      await generateQrCodes({ orderId: selectedOrderId, orderItemId: selectedItemId, quantity });
+      await generateQrCodes({ orderId: selectedOrderId, orderItemId: selectedItemId, quantity: 1 });
       message.success('二维码生成成功');
       loadQrCodes();
-    } catch {
-      // handled
+    } catch (err: any) {
+      if (err?.message) {
+        message.error(err.message);
+      }
     } finally {
       setGenerating(false);
     }
@@ -73,6 +75,8 @@ const QrCodePage: React.FC = () => {
     try {
       const res = await getQrCodePage({ page: 1, pageSize: 100, orderId: selectedOrderId });
       setQrCodes(res.data.records);
+      const itemIds = new Set(res.data.records.map((qr) => qr.orderItemId));
+      setGeneratedItemIds(itemIds);
     } catch {
       // handled
     } finally {
@@ -156,25 +160,15 @@ const QrCodePage: React.FC = () => {
             <Form.Item label="选择产品" style={{ marginBottom: 0 }}>
               <Select
                 placeholder="请选择产品"
-                style={{ width: 240 }}
+                style={{ width: 280 }}
                 options={orderItems.map((i) => ({
-                  label: `${i.productCode} - ${i.productName}`,
+                  label: `${i.productCode} - ${i.productName}${generatedItemIds.has(i.id) ? ' (已生成)' : ''}`,
                   value: i.id,
+                  disabled: generatedItemIds.has(i.id),
                 }))}
                 onChange={setSelectedItemId}
                 value={selectedItemId}
                 disabled={!selectedOrderId}
-              />
-            </Form.Item>
-          </Col>
-          <Col>
-            <Form.Item label="生成数量" style={{ marginBottom: 0 }}>
-              <InputNumber
-                min={1}
-                max={1000}
-                value={quantity}
-                onChange={(v) => setQuantity(v || 1)}
-                style={{ width: 120 }}
               />
             </Form.Item>
           </Col>
@@ -184,7 +178,7 @@ const QrCodePage: React.FC = () => {
               icon={<QrcodeOutlined />}
               onClick={handleGenerate}
               loading={generating}
-              disabled={!selectedOrderId || !selectedItemId}
+              disabled={!selectedOrderId || !selectedItemId || generatedItemIds.has(selectedItemId || 0)}
             >
               生成二维码
             </Button>
