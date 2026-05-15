@@ -3,7 +3,6 @@ package com.workshop.module.order.service.impl;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.workshop.common.exception.BusinessException;
-import com.workshop.common.utils.CodeGenerator;
 import com.workshop.module.order.dto.OrderCreateDTO;
 import com.workshop.module.order.dto.OrderItemCreateDTO;
 import com.workshop.module.order.dto.OrderPageDTO;
@@ -40,9 +39,6 @@ public class OrderServiceImpl implements OrderService {
 
     @Autowired
     private OrderFileMapper orderFileMapper;
-
-    @Autowired
-    private CodeGenerator codeGenerator;
 
     private String generateOrderNo() {
         String today = LocalDate.now().toString().replace("-", "");
