@@ -51,8 +51,8 @@ public class OrderServiceImpl implements OrderService {
     private String generateUuidV7() {
         long timestamp = System.currentTimeMillis();
         long random = (long) (Math.random() * 0xFFFFFFFFFFFFFFFFL);
-        long msb = (timestamp << 48) | (0x7L << 12) | (random >> 48);
-        long lsb = (random & 0xFFFFFFFFFFFFL) | 0x8000000000000000L;
+        long msb = (timestamp << 16) | (0x7L << 12) | (random & 0xFFFL);
+        long lsb = (random & 0x3FFFFFFFFFFFFFFFL) | 0x8000000000000000L;
         return String.format("%016x%016x", msb, lsb);
     }
 
