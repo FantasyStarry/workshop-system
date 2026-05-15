@@ -1,5 +1,6 @@
 {
   "pages": [
+    "pages/login/login",
     "pages/index/index",
     "pages/scan/scan",
     "pages/report/report",
@@ -21,5 +22,8 @@
     "scope.camera": {
       "desc": "用于扫码功能"
     }
-  }
+  },
+  "requiredPrivateInfos": [
+    "getLocation"
+  ]
 }

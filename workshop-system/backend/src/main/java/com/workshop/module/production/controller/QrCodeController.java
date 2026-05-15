@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.workshop.common.result.PageResult;
 import com.workshop.common.result.Result;
 import com.workshop.module.production.dto.QrCodeDecodeResultDTO;
+import com.workshop.module.production.dto.QrCodeDetailDTO;
 import com.workshop.module.production.dto.QrCodeGenerateDTO;
 import com.workshop.module.production.entity.QrCode;
 import com.workshop.module.production.service.QrCodeService;
@@ -83,5 +84,10 @@ public class QrCodeController {
         String qrContent = req.get("qrContent");
         QrCodeDecodeResultDTO result = qrCodeService.decode(qrContent);
         return Result.ok(result);
+    }
+
+    @GetMapping("/detail/list")
+    public Result<List<QrCodeDetailDTO>> getDetailList(@RequestParam Long orderId) {
+        return Result.ok(qrCodeService.getDetailList(orderId));
     }
 }

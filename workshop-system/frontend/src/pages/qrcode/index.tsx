@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { Card, Form, Select, InputNumber, Button, Table, Tag, Modal, message, Space, Row, Col } from 'antd';
 import { QrcodeOutlined, EyeOutlined } from '@ant-design/icons';
-import { generateQrCodes, getQrCodePage } from '../../api/qrcode';
+import { generateQrCodes, getQrCodeDetailList } from '../../api/qrcode';
 import { getOrderPage, getOrderItems } from '../../api/order';
 import QrCodeImage from '../../components/QrCodeImage';
 import type { QrCode } from '../../types/production';
@@ -9,11 +9,32 @@ import type { Order, OrderItem } from '../../types/order';
 import dayjs from 'dayjs';
 
 const statusMap: Record<number, { label: string; color: string }> = {
-  0: { label: '未开始', color: 'default' },
+  0: { label: '待生产', color: 'default' },
   1: { label: '生产中', color: 'processing' },
   2: { label: '已完成', color: 'success' },
   3: { label: '已作废', color: 'error' },
 };
+
+interface QrCodeDetail {
+  id: number;
+  qrContent: string;
+  serialNo: string;
+  status: number;
+  statusText: string;
+  productName: string;
+  productCode: string;
+  currentStageName: string;
+  currentStageSeq: number;
+  totalStages: number;
+  completedStages: number;
+  progressPercent: number;
+  lastOperator: string;
+  lastOperatorName: string;
+  lastScanTime: string;
+  lastLocation: string;
+  generatedAt: string;
+  generatedByName: string;
+}
 
 const QrCodePage: React.FC = () => {
   const [orders, setOrders] = useState<Order[]>([]);
@@ -21,7 +42,7 @@ const QrCodePage: React.FC = () => {
   const [selectedOrderId, setSelectedOrderId] = useState<number | undefined>();
   const [selectedItemId, setSelectedItemId] = useState<number | undefined>();
   const [generating, setGenerating] = useState(false);
-  const [qrCodes, setQrCodes] = useState<QrCode[]>([]);
+  const [qrCodes, setQrCodes] = useState<QrCodeDetail[]>([]);
   const [qrcodeLoading, setQrCodeLoading] = useState(false);
   const [imageModalOpen, setImageModalOpen] = useState(false);
   const [selectedQrCodeId, setSelectedQrCodeId] = useState<number>(0);
@@ -73,9 +94,9 @@ const QrCodePage: React.FC = () => {
   const loadQrCodes = useCallback(async () => {
     setQrCodeLoading(true);
     try {
-      const res = await getQrCodePage({ page: 1, pageSize: 100, orderId: selectedOrderId });
-      setQrCodes(res.data.records);
-      const itemIds = new Set(res.data.records.map((qr) => qr.orderItemId));
+      const res = await getQrCodeDetailList(selectedOrderId!);
+      setQrCodes(res.data);
+      const itemIds = new Set(res.data.map((qr) => qr.orderItemId));
       setGeneratedItemIds(itemIds);
     } catch {
       // handled
@@ -91,37 +112,97 @@ const QrCodePage: React.FC = () => {
   }, [selectedOrderId, loadQrCodes]);
 
   const columns = [
-    { title: '编码内容', dataIndex: 'qrContent', key: 'qrContent', width: 200, ellipsis: true },
-    { title: '关联产品', dataIndex: 'productName', key: 'productName', width: 140 },
+    { 
+      title: '序列号', 
+      dataIndex: 'serialNo', 
+      key: 'serialNo', 
+      width: 80 
+    },
+    { 
+      title: '产品', 
+      dataIndex: 'productName', 
+      key: 'productName', 
+      width: 140,
+      render: (v: string, record: QrCodeDetail) => (
+        <div>
+          <div>{v}</div>
+          <div style={{ fontSize: 12, color: '#999' }}>{record.productCode}</div>
+        </div>
+      ),
+    },
     {
       title: '当前环节',
       dataIndex: 'currentStageName',
       key: 'currentStageName',
       width: 120,
-      render: (v: string) => v || '-',
+      render: (v: string, record: QrCodeDetail) => (
+        <div>
+          <div>{v || '-'}</div>
+          <div style={{ fontSize: 12, color: '#999' }}>
+            {record.currentStageSeq}/{record.totalStages}
+          </div>
+        </div>
+      ),
+    },
+    {
+      title: '生产进度',
+      key: 'progress',
+      width: 150,
+      render: (_: any, record: QrCodeDetail) => (
+        <div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <div style={{ flex: 1, height: 8, backgroundColor: '#f0f0f0', borderRadius: 4, overflow: 'hidden' }}>
+              <div 
+                style={{ 
+                  height: '100%', 
+                  backgroundColor: record.status === 2 ? '#52c41a' : '#1890ff',
+                  width: `${record.progressPercent || 0}%`,
+                  transition: 'width 0.3s'
+                }} 
+              />
+            </div>
+            <span style={{ fontSize: 12, color: '#666' }}>{record.progressPercent || 0}%</span>
+          </div>
+        </div>
+      ),
     },
     {
       title: '状态',
-      dataIndex: 'status',
-      key: 'status',
-      width: 100,
-      render: (v: number) => {
-        const s = statusMap[v] || { label: '未知', color: 'default' };
-        return <Tag color={s.color}>{s.label}</Tag>;
+      dataIndex: 'statusText',
+      key: 'statusText',
+      width: 90,
+      render: (v: string, record: QrCodeDetail) => {
+        const s = statusMap[record.status] || { label: '未知', color: 'default' };
+        return <Tag color={s.color}>{v || s.label}</Tag>;
       },
+    },
+    {
+      title: '最后操作',
+      key: 'lastOperator',
+      width: 150,
+      render: (_: any, record: QrCodeDetail) => (
+        <div>
+          <div>{record.lastOperatorName || record.lastOperator || '-'}</div>
+          {record.lastScanTime && (
+            <div style={{ fontSize: 12, color: '#999' }}>
+              {dayjs(record.lastScanTime).format('MM-DD HH:mm')}
+            </div>
+          )}
+        </div>
+      ),
     },
     {
       title: '生成时间',
       dataIndex: 'generatedAt',
       key: 'generatedAt',
-      width: 180,
-      render: (v: string) => (v ? dayjs(v).format('YYYY-MM-DD HH:mm:ss') : '-'),
+      width: 160,
+      render: (v: string) => (v ? dayjs(v).format('YYYY-MM-DD HH:mm') : '-'),
     },
     {
       title: '操作',
       key: 'action',
       width: 100,
-      render: (_: any, record: QrCode) => (
+      render: (_: any, record: QrCodeDetail) => (
         <Button
           type="link"
           size="small"

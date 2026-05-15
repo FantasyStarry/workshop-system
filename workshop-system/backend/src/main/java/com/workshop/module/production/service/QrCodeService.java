@@ -2,6 +2,7 @@ package com.workshop.module.production.service;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.workshop.module.production.dto.QrCodeDecodeResultDTO;
+import com.workshop.module.production.dto.QrCodeDetailDTO;
 import com.workshop.module.production.dto.QrCodeGenerateDTO;
 import com.workshop.module.production.dto.ScanReportDTO;
 import com.workshop.module.production.entity.ProductionRecord;
@@ -16,4 +17,5 @@ public interface QrCodeService {
     QrCodeDecodeResultDTO decode(String qrContent);
     QrCode getByContent(String qrContent);
     void updateStageAndStatus(Long qrCodeId, Long stageId, Integer status);
+    List<QrCodeDetailDTO> getDetailList(Long orderId);
 }

@@ -11,12 +11,17 @@ import com.workshop.module.order.mapper.OrderMapper;
 import com.workshop.module.product.entity.Product;
 import com.workshop.module.product.mapper.ProductMapper;
 import com.workshop.module.production.dto.QrCodeDecodeResultDTO;
+import com.workshop.module.production.dto.QrCodeDetailDTO;
 import com.workshop.module.production.dto.QrCodeGenerateDTO;
+import com.workshop.module.production.entity.ProductionRecord;
 import com.workshop.module.production.entity.ProductionStage;
 import com.workshop.module.production.entity.QrCode;
+import com.workshop.module.production.mapper.ProductionRecordMapper;
 import com.workshop.module.production.mapper.ProductionStageMapper;
 import com.workshop.module.production.mapper.QrCodeMapper;
 import com.workshop.module.production.service.QrCodeService;
+import com.workshop.module.sys.entity.SysUser;
+import com.workshop.module.sys.mapper.SysUserMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -44,12 +49,17 @@ public class QrCodeServiceImpl implements QrCodeService {
     private ProductionStageMapper productionStageMapper;
 
     @Autowired
+    private ProductionRecordMapper productionRecordMapper;
+
+    @Autowired
+    private SysUserMapper sysUserMapper;
+
+    @Autowired
     private QrCodeUtils qrCodeUtils;
 
     @Override
     @Transactional
     public List<QrCode> generate(QrCodeGenerateDTO dto, Long userId) {
-        // 1. Query orderItem and related order + product
         OrderItem orderItem = orderItemMapper.selectById(dto.getOrderItemId());
         if (orderItem == null) {
             throw new BusinessException(404, "订单明细不存在");
@@ -65,7 +75,6 @@ public class QrCodeServiceImpl implements QrCodeService {
             throw new BusinessException(404, "产品不存在");
         }
 
-        // 2. Check if QR code already generated for this order
         LambdaQueryWrapper<QrCode> existsWrapper = new LambdaQueryWrapper<>();
         existsWrapper.eq(QrCode::getOrderItemId, dto.getOrderItemId());
         long count = qrCodeMapper.selectCount(existsWrapper);
@@ -73,28 +82,22 @@ public class QrCodeServiceImpl implements QrCodeService {
             throw new BusinessException(400, "该订单产品已生成过二维码，不能重复生成");
         }
 
-        // 3. Generate QR codes based on orderItem quantity (fixed quantity)
         List<QrCode> result = new ArrayList<>();
         int fixedQuantity = orderItem.getQuantity() != null ? orderItem.getQuantity() : 1;
         for (int i = 0; i < fixedQuantity; i++) {
-            // a. Generate serial number (query max serial_no for same orderItemId + current time window)
             Integer maxSerialNo = getMaxSerialNo(dto.getOrderItemId());
             int serialNo = maxSerialNo + 1;
 
-            // b. Generate qrContent
             String qrContent = qrCodeUtils.generateQrContent(order.getOrderNo(), product.getProductCode(), serialNo);
-
-            // c. Generate QR code image
             String qrImagePath = qrCodeUtils.generateQrCode(qrContent);
 
-            // d. Save QrCode record
             QrCode qrCode = new QrCode();
             qrCode.setQrContent(qrContent);
             qrCode.setOrderItemId(dto.getOrderItemId());
             qrCode.setProductId(orderItem.getProductId());
             qrCode.setSerialNo(String.format("%04d", serialNo));
             qrCode.setQrImagePath(qrImagePath);
-            qrCode.setStatus(0); // PENDING
+            qrCode.setStatus(0);
             qrCode.setGeneratedBy(userId);
             qrCode.setGeneratedAt(LocalDateTime.now());
 
@@ -102,12 +105,10 @@ public class QrCodeServiceImpl implements QrCodeService {
             result.add(qrCode);
         }
 
-        // 4. Update orderItem.productionStatus to IN_PRODUCTION
-        orderItem.setProductionStatus(1); // IN_PRODUCTION
+        orderItem.setProductionStatus(1);
         orderItemMapper.updateById(orderItem);
 
-        // 5. Update order.status to IN_PRODUCTION
-        order.setStatus(1); // IN_PRODUCTION
+        order.setStatus(1);
         orderMapper.updateById(order);
 
         return result;
@@ -150,7 +151,6 @@ public class QrCodeServiceImpl implements QrCodeService {
 
     @Override
     public QrCodeDecodeResultDTO decode(String qrContent) {
-        // 1. Query QrCode by content
         QrCode qrCode = qrCodeMapper.selectOne(
                 new LambdaQueryWrapper<QrCode>().eq(QrCode::getQrContent, qrContent)
         );
@@ -158,7 +158,6 @@ public class QrCodeServiceImpl implements QrCodeService {
             throw new BusinessException(404, "二维码不存在");
         }
 
-        // 2. Query related information
         OrderItem orderItem = orderItemMapper.selectById(qrCode.getOrderItemId());
         Product product = productMapper.selectById(qrCode.getProductId());
 
@@ -199,5 +198,100 @@ public class QrCodeServiceImpl implements QrCodeService {
             qrCode.setStatus(status);
             qrCodeMapper.updateById(qrCode);
         }
+    }
+
+    @Override
+    public List<QrCodeDetailDTO> getDetailList(Long orderId) {
+        List<OrderItem> orderItems = orderItemMapper.selectList(
+                new LambdaQueryWrapper<OrderItem>().eq(OrderItem::getOrderId, orderId)
+        );
+        
+        List<Long> itemIds = orderItems.stream().map(OrderItem::getId).toList();
+        if (itemIds.isEmpty()) {
+            return List.of();
+        }
+
+        List<QrCode> qrCodes = qrCodeMapper.selectList(
+                new LambdaQueryWrapper<QrCode>().in(QrCode::getOrderItemId, itemIds)
+        );
+
+        List<ProductionStage> allStages = productionStageMapper.selectList(
+                new LambdaQueryWrapper<ProductionStage>().eq(ProductionStage::getStatus, 1)
+        );
+        int totalStages = allStages.size();
+
+        return qrCodes.stream().map(qrCode -> {
+            QrCodeDetailDTO dto = new QrCodeDetailDTO();
+            dto.setId(qrCode.getId());
+            dto.setQrContent(qrCode.getQrContent());
+            dto.setSerialNo(qrCode.getSerialNo());
+            dto.setBatchNo(qrCode.getBatchNo());
+            dto.setStatus(qrCode.getStatus());
+            dto.setStatusText(mapStatus(qrCode.getStatus()));
+            dto.setGeneratedAt(qrCode.getGeneratedAt());
+
+            Product product = productMapper.selectById(qrCode.getProductId());
+            if (product != null) {
+                dto.setProductId(product.getId());
+                dto.setProductName(product.getProductName());
+                dto.setProductCode(product.getProductCode());
+            }
+
+            if (qrCode.getCurrentStageId() != null) {
+                ProductionStage stage = productionStageMapper.selectById(qrCode.getCurrentStageId());
+                if (stage != null) {
+                    dto.setCurrentStageId(stage.getId());
+                    dto.setCurrentStageName(stage.getStageName());
+                    dto.setCurrentStageSeq(stage.getStageSeq());
+                    dto.setTotalStages(totalStages);
+                    dto.setCompletedStages(stage.getStageSeq());
+                    dto.setProgressPercent(totalStages > 0 ? (stage.getStageSeq() * 100 / totalStages) : 0);
+                }
+            } else {
+                dto.setTotalStages(totalStages);
+                dto.setCompletedStages(0);
+                dto.setProgressPercent(0);
+            }
+
+            List<ProductionRecord> records = productionRecordMapper.selectList(
+                    new LambdaQueryWrapper<ProductionRecord>()
+                            .eq(ProductionRecord::getQrCodeId, qrCode.getId())
+                            .orderByDesc(ProductionRecord::getCreatedAt)
+                            .last("LIMIT 1")
+            );
+            if (!records.isEmpty()) {
+                ProductionRecord lastRecord = records.get(0);
+                dto.setLastScanTime(lastRecord.getScanTime());
+                dto.setLastLocation(lastRecord.getLocation());
+                
+                if (lastRecord.getOperatorId() != null) {
+                    SysUser operator = sysUserMapper.selectById(lastRecord.getOperatorId());
+                    if (operator != null) {
+                        dto.setLastOperator(operator.getUsername());
+                        dto.setLastOperatorName(operator.getRealName());
+                    }
+                }
+            }
+
+            if (qrCode.getGeneratedBy() != null) {
+                SysUser generator = sysUserMapper.selectById(qrCode.getGeneratedBy());
+                if (generator != null) {
+                    dto.setGeneratedByName(generator.getRealName());
+                }
+            }
+
+            dto.setScrapReason(qrCode.getScrapReason());
+            return dto;
+        }).toList();
+    }
+
+    private String mapStatus(Integer status) {
+        return switch (status) {
+            case 0 -> "待生产";
+            case 1 -> "生产中";
+            case 2 -> "已完成";
+            case 3 -> "已作废";
+            default -> "未知";
+        };
     }
 }

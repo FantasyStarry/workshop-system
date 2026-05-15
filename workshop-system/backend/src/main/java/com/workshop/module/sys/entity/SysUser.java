@@ -27,6 +27,7 @@ public class SysUser {
     private Long deptId;
     private String roleIds;
     private Integer status;
+    private String wxOpenid;
     private String lastLoginIp;
     private LocalDateTime lastLoginTime;
     private LocalDateTime createdAt;

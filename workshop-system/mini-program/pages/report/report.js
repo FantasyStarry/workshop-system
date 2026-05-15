@@ -46,10 +46,14 @@ Page({
   onStageChange: function (e) {
     const index = e.detail.value;
     const stage = this.data.stages[index];
-    this.setData({
-      selectedStageId: stage.id,
-      selectedStageName: stage.stageName
-    });
+    if (stage) {
+      this.setData({
+        selectedStageId: stage.id,
+        selectedStageName: stage.stageName
+      });
+    } else {
+      console.warn('选择的工序不存在');
+    }
   },
 
   onLocationInput: function (e) {

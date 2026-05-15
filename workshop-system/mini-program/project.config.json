@@ -37,5 +37,13 @@
     "tabSize": 2
   },
   "appid": "wx6431ff9669e85e94",
-  "simulatorPluginLibVersion": {}
+  "simulatorPluginLibVersion": {},
+  "serverDomain": {
+    "request": [
+      "a8ca5b67.natappfree.cc"
+    ],
+    "uploadFile": [],
+    "downloadFile": [],
+    "socket": []
+  }
 }
