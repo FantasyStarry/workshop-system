@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.workshop.module.order.mapper.OrderItemMapper">
+
+    <select id="selectWithProductByOrderId" resultType="com.workshop.module.order.dto.OrderItemResponseDTO">
+        SELECT 
+            oi.id,
+            oi.order_id,
+            oi.product_id,
+            p.product_name,
+            p.product_code,
+            p.specification,
+            p.product_type,
+            oi.quantity,
+            oi.unit_price,
+            oi.subtotal,
+            oi.production_status,
+            oi.sort_order,
+            oi.remark,
+            oi.created_at
+        FROM order_items oi
+        LEFT JOIN products p ON oi.product_id = p.id
+        WHERE oi.order_id = #{orderId}
+        ORDER BY oi.sort_order ASC, oi.created_at ASC
+    </select>
+
+</mapper>

@@ -8,6 +8,7 @@ import com.workshop.module.order.entity.Order;
 import com.workshop.module.order.entity.OrderItem;
 import com.workshop.module.order.mapper.OrderItemMapper;
 import com.workshop.module.order.mapper.OrderMapper;
+import com.workshop.module.production.dto.ProductionRecordDetailDTO;
 import com.workshop.module.production.dto.RecordPageDTO;
 import com.workshop.module.production.dto.ScanReportDTO;
 import com.workshop.module.production.entity.ProductionRecord;
@@ -92,7 +93,7 @@ public class ProductionRecordServiceImpl implements ProductionRecordService {
             if (lastStage != null && stage.getStageSeq() > lastStage.getStageSeq() + 1) {
                 throw new BusinessException(400, "不允许跳过生产环节，当前最大环节序号为 " + lastStage.getStageSeq()
                         + "(" + lastStage.getStageName() + ")，不能直接上报序号 " + stage.getStageSeq()
-                        + "(" + stage.getStageName() + ")");
+                        + "(" + lastStage.getStageName() + ")");
             }
         } else {
             // First scan: must be the first stage (stageSeq = 1)
@@ -133,7 +134,7 @@ public class ProductionRecordServiceImpl implements ProductionRecordService {
         record.setTemperature(dto.getTemperature());
         record.setHumidity(dto.getHumidity());
         record.setPhotoUrl(dto.getPhotoUrl());
-        record.setQcResult(0); // Not checked
+        record.setQcResult(null); // Not checked - set to null instead of 0
 
         productionRecordMapper.insert(record);
 
@@ -210,31 +211,13 @@ public class ProductionRecordServiceImpl implements ProductionRecordService {
     }
 
     @Override
-    public List<ProductionRecord> getLifecycleRecords(Long qrCodeId) {
-        return productionRecordMapper.selectList(
-                new LambdaQueryWrapper<ProductionRecord>()
-                        .eq(ProductionRecord::getQrCodeId, qrCodeId)
-                        .orderByAsc(ProductionRecord::getCreatedAt)
-        );
+    public List<ProductionRecordDetailDTO> getLifecycleRecords(Long qrCodeId) {
+        return productionRecordMapper.selectDetailByQrCodeId(qrCodeId);
     }
 
     @Override
-    public List<ProductionRecord> getByOrderId(Long orderId) {
-        // Get all order items for this order first
-        List<OrderItem> items = orderItemMapper.selectList(
-                new LambdaQueryWrapper<OrderItem>().eq(OrderItem::getOrderId, orderId)
-        );
-
-        List<Long> itemIds = items.stream().map(OrderItem::getId).collect(Collectors.toList());
-        if (itemIds.isEmpty()) {
-            return List.of();
-        }
-
-        return productionRecordMapper.selectList(
-                new LambdaQueryWrapper<ProductionRecord>()
-                        .in(ProductionRecord::getOrderItemId, itemIds)
-                        .orderByDesc(ProductionRecord::getCreatedAt)
-        );
+    public List<ProductionRecordDetailDTO> getByOrderId(Long orderId) {
+        return productionRecordMapper.selectDetailByOrderId(orderId);
     }
 
     @Override

@@ -16,19 +16,30 @@ export interface ProductionRecord {
   recordNo: string;
   qrCodeId: number;
   orderItemId: number;
+  
+  productId: number;
+  productCode: string;
+  productName: string;
+  
   stageId: number;
   stageName: string;
+  stageSeq: number;
+  
   operatorId: number;
-  operator: string;
+  operatorName: string;
+  
   scanTime: string;
   location: string;
   temperature: number;
   humidity: number;
   photoUrl: string;
-  qcResult: number;
+  
+  qcResult: number | null;
   qcUserId: number;
+  qcUserName: string;
   qcTime: string;
   qcRemark: string;
+  
   remark: string;
   createdAt: string;
 }

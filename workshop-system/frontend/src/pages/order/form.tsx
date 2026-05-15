@@ -42,14 +42,14 @@ const OrderFormPage: React.FC = () => {
   const loadOrderDetail = async (orderId: number) => {
     try {
       const res = await getOrderDetail(orderId);
-      const order = res.data;
+      const detail = res.data;
+      const order = detail.order;
       form.setFieldsValue({
         ...order,
         orderDate: order.orderDate ? dayjs(order.orderDate) : undefined,
         deliveryDate: order.deliveryDate ? dayjs(order.deliveryDate) : undefined,
       });
-      const itemsRes = await getOrderItems(orderId);
-      setSelectedProducts(itemsRes.data);
+      setSelectedProducts(detail.items || []);
     } catch {
       // handled
     }

@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Card, Descriptions, Tabs, Table, Tag, message, Spin } from 'antd';
 import { useParams } from 'react-router-dom';
 import dayjs from 'dayjs';
-import { getOrderDetail, getOrderItems, getOrderFiles, deleteOrderFile } from '../../api/order';
+import { getOrderDetail, deleteOrderFile } from '../../api/order';
 import { getRecordsByOrder } from '../../api/record';
 import FileUploader from '../../components/FileUploader';
 import ImagePreview from '../../components/ImagePreview';
@@ -38,15 +38,14 @@ const OrderDetailPage: React.FC = () => {
   const loadData = async () => {
     setLoading(true);
     try {
-      const [orderRes, itemsRes, filesRes, recordsRes] = await Promise.all([
+      const [detailRes, recordsRes] = await Promise.all([
         getOrderDetail(Number(id)),
-        getOrderItems(Number(id)),
-        getOrderFiles(Number(id)),
         getRecordsByOrder(Number(id)).catch(() => ({ data: [] })),
       ]);
-      setOrder(orderRes.data);
-      setItems(itemsRes.data);
-      setFiles(filesRes.data);
+      const detail = detailRes.data;
+      setOrder(detail.order);
+      setItems(detail.items || []);
+      setFiles(detail.files || []);
       setRecords(recordsRes.data);
     } catch {
       // handled
@@ -156,16 +155,16 @@ const OrderDetailPage: React.FC = () => {
               rowKey="id"
               pagination={false}
               columns={[
-                { title: '产品', dataIndex: 'productId', key: 'productId' },
+                { title: '产品', dataIndex: 'productName', key: 'productName', render: (v: string, record: ProductionRecord) => `${v || '-'} (${record.productCode || '-'})` },
                 { title: '环节', dataIndex: 'stageName', key: 'stageName' },
-                { title: '操作人', dataIndex: 'operator', key: 'operator' },
-                { title: '扫码时间', dataIndex: 'scanTime', key: 'scanTime', render: (v: string) => dayjs(v).format('YYYY-MM-DD HH:mm:ss') },
+                { title: '操作人', dataIndex: 'operatorName', key: 'operatorName', render: (v: string) => v || '-' },
+                { title: '扫码时间', dataIndex: 'scanTime', key: 'scanTime', render: (v: string) => v ? dayjs(v).format('YYYY-MM-DD HH:mm:ss') : '-' },
                 {
                   title: '质检结果',
                   dataIndex: 'qcResult',
                   key: 'qcResult',
-                  render: (v: number) => {
-                    if (v == null) return '-';
+                  render: (v: number | null) => {
+                    if (v == null) return <Tag color="default">未质检</Tag>;
                     return <Tag color={v === 1 ? 'green' : 'red'}>{v === 1 ? '合格' : '不合格'}</Tag>;
                   },
                 },

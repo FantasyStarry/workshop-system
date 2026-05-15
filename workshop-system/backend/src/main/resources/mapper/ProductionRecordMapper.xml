@@ -57,4 +57,78 @@
         </where>
     </select>
 
+    <select id="selectDetailByOrderId" resultType="com.workshop.module.production.dto.ProductionRecordDetailDTO">
+        SELECT 
+            pr.id,
+            pr.record_no,
+            pr.qr_code_id,
+            pr.order_item_id,
+            p.id as product_id,
+            p.product_code,
+            p.product_name,
+            ps.id as stage_id,
+            ps.stage_name,
+            ps.stage_seq,
+            pr.operator_id,
+            op.real_name as operator_name,
+            pr.scan_time,
+            pr.location,
+            pr.temperature,
+            pr.humidity,
+            pr.photo_url,
+            pr.qc_result,
+            pr.qc_user_id,
+            qu.real_name as qc_user_name,
+            pr.qc_time,
+            pr.qc_remark,
+            pr.remark,
+            pr.created_at
+        FROM production_records pr
+        LEFT JOIN qr_codes qc ON pr.qr_code_id = qc.id
+        LEFT JOIN order_items oi ON qc.order_item_id = oi.id
+        LEFT JOIN products p ON oi.product_id = p.id
+        LEFT JOIN production_stages ps ON pr.stage_id = ps.id
+        LEFT JOIN sys_user op ON pr.operator_id = op.id
+        LEFT JOIN sys_user qu ON pr.qc_user_id = qu.id
+        WHERE oi.order_id = #{orderId}
+        ORDER BY pr.created_at DESC
+    </select>
+
+    <select id="selectDetailByQrCodeId" resultType="com.workshop.module.production.dto.ProductionRecordDetailDTO">
+        SELECT 
+            pr.id,
+            pr.record_no,
+            pr.qr_code_id,
+            pr.order_item_id,
+            p.id as product_id,
+            p.product_code,
+            p.product_name,
+            ps.id as stage_id,
+            ps.stage_name,
+            ps.stage_seq,
+            pr.operator_id,
+            op.real_name as operator_name,
+            pr.scan_time,
+            pr.location,
+            pr.temperature,
+            pr.humidity,
+            pr.photo_url,
+            pr.qc_result,
+            pr.qc_user_id,
+            qu.real_name as qc_user_name,
+            pr.qc_time,
+            pr.qc_remark,
+            pr.remark,
+            pr.created_at
+        FROM production_records pr
+        LEFT JOIN qr_codes qc ON pr.qr_code_id = qc.id
+        LEFT JOIN order_items oi ON qc.order_item_id = oi.id
+        LEFT JOIN products p ON oi.product_id = p.id
+        LEFT JOIN production_stages ps ON pr.stage_id = ps.id
+        LEFT JOIN sys_user op ON pr.operator_id = op.id
+        LEFT JOIN sys_user qu ON pr.qc_user_id = qu.id
+        WHERE pr.qr_code_id = #{qrCodeId}
+        ORDER BY pr.created_at ASC
+    </select>
+
 </mapper>

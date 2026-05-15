@@ -4,7 +4,9 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.workshop.common.exception.BusinessException;
 import com.workshop.module.order.dto.OrderCreateDTO;
+import com.workshop.module.order.dto.OrderDetailDTO;
 import com.workshop.module.order.dto.OrderItemCreateDTO;
+import com.workshop.module.order.dto.OrderItemResponseDTO;
 import com.workshop.module.order.dto.OrderPageDTO;
 import com.workshop.module.order.entity.Order;
 import com.workshop.module.order.entity.OrderFile;
@@ -62,24 +64,22 @@ public class OrderServiceImpl implements OrderService {
     }
 
     @Override
-    public Map<String, Object> getDetail(Long id) {
+    public OrderDetailDTO getDetail(Long id) {
         Order order = orderMapper.selectById(id);
         if (order == null) {
             throw new BusinessException(404, "订单不存在");
         }
 
-        List<OrderItem> items = orderItemMapper.selectList(
-                new LambdaQueryWrapper<OrderItem>().eq(OrderItem::getOrderId, id)
-        );
+        List<OrderItemResponseDTO> items = orderItemMapper.selectWithProductByOrderId(id);
 
         List<OrderFile> files = orderFileMapper.selectList(
                 new LambdaQueryWrapper<OrderFile>().eq(OrderFile::getOrderId, id)
         );
 
-        Map<String, Object> detail = new HashMap<>();
-        detail.put("order", order);
-        detail.put("items", items);
-        detail.put("files", files);
+        OrderDetailDTO detail = new OrderDetailDTO();
+        detail.setOrder(order);
+        detail.setItems(items);
+        detail.setFiles(files);
         return detail;
     }
 

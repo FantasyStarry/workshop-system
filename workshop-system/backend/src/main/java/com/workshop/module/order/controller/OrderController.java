@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.workshop.common.result.PageResult;
 import com.workshop.common.result.Result;
 import com.workshop.module.order.dto.OrderCreateDTO;
+import com.workshop.module.order.dto.OrderDetailDTO;
 import com.workshop.module.order.dto.OrderPageDTO;
 import com.workshop.module.order.entity.Order;
 import com.workshop.module.order.service.OrderService;
@@ -44,7 +45,7 @@ public class OrderController {
     }
 
     @GetMapping("/{id}")
-    public Result<Map<String, Object>> getDetail(@PathVariable Long id) {
+    public Result<OrderDetailDTO> getDetail(@PathVariable Long id) {
         return Result.ok(orderService.getDetail(id));
     }
 

@@ -1,6 +1,7 @@
 package com.workshop.module.production.mapper;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
+import com.workshop.module.production.dto.ProductionRecordDetailDTO;
 import com.workshop.module.production.entity.ProductionRecord;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
@@ -25,4 +26,8 @@ public interface ProductionRecordMapper extends BaseMapper<ProductionRecord> {
                     @Param("operatorId") Long operatorId,
                     @Param("startDate") String startDate,
                     @Param("endDate") String endDate);
+
+    List<ProductionRecordDetailDTO> selectDetailByOrderId(@Param("orderId") Long orderId);
+
+    List<ProductionRecordDetailDTO> selectDetailByQrCodeId(@Param("qrCodeId") Long qrCodeId);
 }

@@ -3,6 +3,7 @@ package com.workshop.module.production.controller;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.workshop.common.result.PageResult;
 import com.workshop.common.result.Result;
+import com.workshop.module.production.dto.ProductionRecordDetailDTO;
 import com.workshop.module.production.dto.RecordPageDTO;
 import com.workshop.module.production.dto.ScanReportDTO;
 import com.workshop.module.production.entity.ProductionRecord;
@@ -56,12 +57,12 @@ public class ProductionRecordController {
     }
 
     @GetMapping("/by-qrcode/{qrCodeId}")
-    public Result<List<ProductionRecord>> getLifecycleRecords(@PathVariable Long qrCodeId) {
+    public Result<List<ProductionRecordDetailDTO>> getLifecycleRecords(@PathVariable Long qrCodeId) {
         return Result.ok(productionRecordService.getLifecycleRecords(qrCodeId));
     }
 
     @GetMapping("/by-order/{orderId}")
-    public Result<List<ProductionRecord>> getByOrder(@PathVariable Long orderId) {
+    public Result<List<ProductionRecordDetailDTO>> getByOrder(@PathVariable Long orderId) {
         return Result.ok(productionRecordService.getByOrderId(orderId));
     }
 
