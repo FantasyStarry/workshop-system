@@ -19,10 +19,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
+import io.ebean.annotation.uuid.UuidV7;
+
 import java.math.BigDecimal;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -43,17 +43,9 @@ public class OrderServiceImpl implements OrderService {
     private CodeGenerator codeGenerator;
 
     private String generateOrderNo() {
-        String today = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyyMMdd"));
-        String uuid = generateUuidV7().substring(0, 8);
+        String today = LocalDate.now().toString().replace("-", "");
+        String uuid = UuidV7.nextId().toString().replace("-", "").substring(0, 8);
         return "ORD" + today + uuid;
-    }
-
-    private String generateUuidV7() {
-        long timestamp = System.currentTimeMillis();
-        long random = (long) (Math.random() * 0xFFFFFFFFFFFFFFFFL);
-        long msb = (timestamp << 16) | (0x7L << 12) | (random & 0xFFFL);
-        long lsb = (random & 0x3FFFFFFFFFFFFFFFL) | 0x8000000000000000L;
-        return String.format("%016x%016x", msb, lsb);
     }
 
     @Override

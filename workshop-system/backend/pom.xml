@@ -25,6 +25,7 @@
         <knife4j.version>4.5.0</knife4j.version>
         <hutool.version>5.8.34</hutool.version>
         <zxing.version>3.5.3</zxing.version>
+        <uuidv7.version>0.1</uuidv7.version>
     </properties>
 
     <dependencies>
@@ -124,6 +125,13 @@
             <groupId>com.h2database</groupId>
             <artifactId>h2</artifactId>
             <scope>test</scope>
+        </dependency>
+
+        <!-- UUID v7 -->
+        <dependency>
+            <groupId>io.ebean</groupId>
+            <artifactId>ebean-uuidv7</artifactId>
+            <version>${uuidv7.version}</version>
         </dependency>
     </dependencies>
 
