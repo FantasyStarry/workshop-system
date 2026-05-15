@@ -146,9 +146,9 @@ public class WxLoginService {
         // 真实模式：调微信接口获取 openid
         try {
             String url = "https://api.weixin.qq.com/sns/jscode2session"
-                    + "?appid=" + URLEncoder.encode(wxAppid, "UTF-8")
-                    + "&secret=" + URLEncoder.encode(wxSecret, "UTF-8")
-                    + "&js_code=" + URLEncoder.encode(code, "UTF-8")
+                    + "?appid=" + URLEncoder.encode(wxAppid, StandardCharsets.UTF_8)
+                    + "&secret=" + URLEncoder.encode(wxSecret, StandardCharsets.UTF_8)
+                    + "&js_code=" + URLEncoder.encode(code, StandardCharsets.UTF_8)
                     + "&grant_type=authorization_code";
 
             HttpRequest request = HttpRequest.newBuilder()
