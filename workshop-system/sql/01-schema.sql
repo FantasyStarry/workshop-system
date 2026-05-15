@@ -196,7 +196,7 @@ CREATE TABLE `production_records` (
   `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
   PRIMARY KEY (`id`),
   UNIQUE KEY `uk_record_no` (`record_no`),
-  KEY `idx_qr_code_stage` (`qr_code_id`, `stage_id`),
+  UNIQUE KEY `uk_qr_code_stage` (`qr_code_id`, `stage_id`),
   KEY `idx_order_item` (`order_item_id`),
   KEY `idx_operator_time` (`operator_id`, `scan_time`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='生产流转记录表';

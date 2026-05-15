@@ -73,6 +73,14 @@ public class ProductionRecordServiceImpl implements ProductionRecordService {
             throw new BusinessException(404, "生产环节不存在或已停用");
         }
 
+        // 一次性获取首末环节，避免重复查询
+        List<ProductionStage> allActiveStages = productionStageMapper.selectList(
+                new LambdaQueryWrapper<ProductionStage>()
+                        .eq(ProductionStage::getStatus, 1)
+                        .orderByAsc(ProductionStage::getStageSeq));
+        ProductionStage firstStage = allActiveStages.isEmpty() ? null : allActiveStages.get(0);
+        ProductionStage finalPipelineStage = allActiveStages.isEmpty() ? null : allActiveStages.get(allActiveStages.size() - 1);
+
         // 4. Validate stage sequence (no skipping)
         // Query the max reported stage for this QrCode
         List<ProductionRecord> existingRecords = productionRecordMapper.selectList(
@@ -96,16 +104,9 @@ public class ProductionRecordServiceImpl implements ProductionRecordService {
                         + "(" + lastStage.getStageName() + ")");
             }
         } else {
-            // First scan: must be the first stage (stageSeq = 1)
-            // Query min stageSeq
-            List<ProductionStage> allStages = productionStageMapper.selectList(
-                    new LambdaQueryWrapper<ProductionStage>()
-                            .eq(ProductionStage::getStatus, 1)
-                            .orderByAsc(ProductionStage::getStageSeq)
-                            .last("LIMIT 1")
-            );
-            if (!allStages.isEmpty() && stage.getStageSeq() > allStages.get(0).getStageSeq()) {
-                throw new BusinessException(400, "首次扫码必须从第一个环节(" + allStages.get(0).getStageName() + ")开始");
+            // First scan: must start from the first stage
+            if (firstStage != null && stage.getStageSeq() > firstStage.getStageSeq()) {
+                throw new BusinessException(400, "首次扫码必须从第一个环节(" + firstStage.getStageName() + ")开始");
             }
         }
 
@@ -134,7 +135,7 @@ public class ProductionRecordServiceImpl implements ProductionRecordService {
         record.setTemperature(dto.getTemperature());
         record.setHumidity(dto.getHumidity());
         record.setPhotoUrl(dto.getPhotoUrl());
-        record.setQcResult(null); // Not checked - set to null instead of 0
+        record.setQcResult(0); // 0=未检
 
         productionRecordMapper.insert(record);
 
@@ -146,15 +147,8 @@ public class ProductionRecordServiceImpl implements ProductionRecordService {
             qrCode.setStatus(1); // IN_PRODUCTION
         }
 
-        // 9. Check if this is the last stage (max stageSeq)
-        List<ProductionStage> allStages = productionStageMapper.selectList(
-                new LambdaQueryWrapper<ProductionStage>()
-                        .eq(ProductionStage::getStatus, 1)
-                        .orderByDesc(ProductionStage::getStageSeq)
-                        .last("LIMIT 1")
-        );
-        if (!allStages.isEmpty() && stage.getStageSeq().equals(allStages.get(0).getStageSeq())) {
-            // This is the final stage
+        // 9. Check if this is the last stage in the pipeline
+        if (finalPipelineStage != null && stage.getStageSeq().equals(finalPipelineStage.getStageSeq())) {
             qrCode.setStatus(2); // COMPLETED
         }
 

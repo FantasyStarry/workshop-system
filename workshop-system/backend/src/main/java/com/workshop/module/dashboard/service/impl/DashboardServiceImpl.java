@@ -6,7 +6,6 @@ import com.workshop.module.dashboard.service.DashboardService;
 import com.workshop.module.order.entity.Order;
 import com.workshop.module.order.mapper.OrderMapper;
 import com.workshop.module.production.entity.ProductionRecord;
-import com.workshop.module.production.entity.ProductionStage;
 import com.workshop.module.production.entity.QrCode;
 import com.workshop.module.production.mapper.ProductionRecordMapper;
 import com.workshop.module.production.mapper.ProductionStageMapper;
@@ -16,7 +15,10 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.time.format.DateTimeFormatter;
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 public class DashboardServiceImpl implements DashboardService {
@@ -38,11 +40,13 @@ public class DashboardServiceImpl implements DashboardService {
         Map<String, Object> data = new HashMap<>();
 
         LocalDateTime todayStart = LocalDate.now().atStartOfDay();
+        LocalDateTime todayEnd = LocalDate.now().atTime(LocalTime.MAX);
 
-        // 今日扫码次数
+        // 今日扫码次数（用 scanTime 而非 createdAt）
         Long todayScans = productionRecordMapper.selectCount(
                 new LambdaQueryWrapper<ProductionRecord>()
-                        .ge(ProductionRecord::getCreatedAt, todayStart));
+                        .ge(ProductionRecord::getScanTime, todayStart)
+                        .le(ProductionRecord::getScanTime, todayEnd));
         data.put("todayScanCount", todayScans);
 
         // 生产中订单数
@@ -68,28 +72,37 @@ public class DashboardServiceImpl implements DashboardService {
         List<Map<String, Object>> stageDistribution = productionStageMapper.selectStageDistribution();
         data.put("stageDistribution", stageDistribution);
 
-        // 最近7天趋势
+        // 最近7天趋势（2 次 GROUP BY 查询，代替之前的 14 次单条查询）
+        LocalDate sevenDaysAgo = LocalDate.now().minusDays(6);
+        DateTimeFormatter fmt = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+
+        // 查询每天扫码数
+        List<Map<String, Object>> scanTrend = productionRecordMapper.selectDailyScanTrend(
+                sevenDaysAgo.atStartOfDay().format(fmt),
+                todayEnd.format(fmt));
+
+        // 查询每天完成数
+        List<Map<String, Object>> completeTrend = productionRecordMapper.selectDailyCompleteTrend(
+                sevenDaysAgo.atStartOfDay().format(fmt),
+                todayEnd.format(fmt));
+
+        // 组装 7 天数据（补全天）
+        Map<String, Long> scanMap = scanTrend.stream()
+                .collect(Collectors.toMap(
+                        m -> (String) m.get("record_date"),
+                        m -> ((Number) m.get("day_count")).longValue()));
+        Map<String, Long> completeMap = completeTrend.stream()
+                .collect(Collectors.toMap(
+                        m -> (String) m.get("record_date"),
+                        m -> ((Number) m.get("day_count")).longValue()));
+
         List<Map<String, Object>> trend = new ArrayList<>();
         for (int i = 6; i >= 0; i--) {
-            LocalDate date = LocalDate.now().minusDays(i);
-            LocalDateTime dayStart = date.atStartOfDay();
-            LocalDateTime dayEnd = date.atTime(23, 59, 59);
-
-            Long scanCount = productionRecordMapper.selectCount(
-                    new LambdaQueryWrapper<ProductionRecord>()
-                            .ge(ProductionRecord::getCreatedAt, dayStart)
-                            .le(ProductionRecord::getCreatedAt, dayEnd));
-
-            Long completeCount = qrCodeMapper.selectCount(
-                    new LambdaQueryWrapper<QrCode>()
-                            .eq(QrCode::getStatus, 2)
-                            .ge(QrCode::getGeneratedAt, dayStart)
-                            .le(QrCode::getGeneratedAt, dayEnd));
-
+            String dateStr = LocalDate.now().minusDays(i).toString();
             Map<String, Object> dayData = new HashMap<>();
-            dayData.put("date", date.toString());
-            dayData.put("scanCount", scanCount);
-            dayData.put("completeCount", completeCount);
+            dayData.put("date", dateStr);
+            dayData.put("scanCount", scanMap.getOrDefault(dateStr, 0L));
+            dayData.put("completeCount", completeMap.getOrDefault(dateStr, 0L));
             trend.add(dayData);
         }
         data.put("last7DaysTrend", trend);

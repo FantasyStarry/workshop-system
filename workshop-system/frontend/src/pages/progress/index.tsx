@@ -231,14 +231,16 @@ const ProgressPage: React.FC = () => {
                                               <ClockCircleOutlined style={{ marginRight: 4 }} />
                                               {dayjs(rec.scanTime).format('YYYY-MM-DD HH:mm:ss')}
                                             </div>
-                                            {rec.qcResult != null && (
-                                              <div style={{ marginTop: 4 }}>
-                                                质检：
+                                            <div style={{ marginTop: 4 }}>
+                                              质检：
+                                              {rec.qcResult === 0 ? (
+                                                <Tag color="default">未质检</Tag>
+                                              ) : (
                                                 <Tag color={rec.qcResult === 1 ? 'green' : 'red'}>
                                                   {rec.qcResult === 1 ? '合格' : '不合格'}
                                                 </Tag>
-                                              </div>
-                                            )}
+                                              )}
+                                            </div>
                                           </div>
                                         </Timeline.Item>
                                       ))}

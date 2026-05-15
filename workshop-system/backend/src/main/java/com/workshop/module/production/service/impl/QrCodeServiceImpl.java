@@ -26,6 +26,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import org.apache.ibatis.session.ExecutorType;
+import org.apache.ibatis.session.SqlSession;
+import org.mybatis.spring.SqlSessionTemplate;
+
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -56,6 +60,9 @@ public class QrCodeServiceImpl implements QrCodeService {
 
     @Autowired
     private QrCodeUtils qrCodeUtils;
+
+    @Autowired
+    private SqlSessionTemplate sqlSessionTemplate;
 
     @Override
     @Transactional
@@ -101,8 +108,21 @@ public class QrCodeServiceImpl implements QrCodeService {
             qrCode.setGeneratedBy(userId);
             qrCode.setGeneratedAt(LocalDateTime.now());
 
-            qrCodeMapper.insert(qrCode);
             result.add(qrCode);
+        }
+
+        // 批量插入
+        if (!result.isEmpty()) {
+            SqlSession sqlSession = sqlSessionTemplate.getSqlSessionFactory().openSession(ExecutorType.BATCH);
+            try {
+                QrCodeMapper batchMapper = sqlSession.getMapper(QrCodeMapper.class);
+                for (QrCode qr : result) {
+                    batchMapper.insert(qr);
+                }
+                sqlSession.commit();
+            } finally {
+                sqlSession.close();
+            }
         }
 
         orderItem.setProductionStatus(1);

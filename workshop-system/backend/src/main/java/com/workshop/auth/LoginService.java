@@ -5,15 +5,16 @@ import com.workshop.auth.dto.LoginDTO;
 import com.workshop.auth.dto.LoginResultDTO;
 import com.workshop.common.exception.BusinessException;
 import com.workshop.common.utils.JwtUtils;
-import com.workshop.module.sys.entity.SysUser;
-import com.workshop.module.sys.mapper.SysUserMapper;
 import com.workshop.module.sys.entity.SysRole;
+import com.workshop.module.sys.entity.SysUser;
 import com.workshop.module.sys.mapper.SysRoleMapper;
+import com.workshop.module.sys.mapper.SysUserMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -65,7 +66,6 @@ public class LoginService {
             throw new BusinessException(404, "用户不存在");
         }
 
-        // Resolve role codes from roleIds
         List<String> roleCodes = new ArrayList<>();
         if (user.getRoleIds() != null && !user.getRoleIds().isEmpty()) {
             String[] ids = user.getRoleIds().split(",");
@@ -81,7 +81,7 @@ public class LoginService {
             }
         }
 
-        Map<String, Object> userInfo = new java.util.HashMap<>();
+        Map<String, Object> userInfo = new HashMap<>();
         userInfo.put("id", String.valueOf(user.getId()));
         userInfo.put("username", user.getUsername());
         userInfo.put("realName", user.getRealName());
@@ -95,5 +95,52 @@ public class LoginService {
         userInfo.put("createdAt", user.getCreatedAt());
 
         return userInfo;
+    }
+
+    public void updatePassword(Long userId, String oldPassword, String newPassword) {
+        if (oldPassword == null || newPassword == null) {
+            throw new BusinessException(400, "旧密码和新密码不能为空");
+        }
+
+        SysUser user = sysUserMapper.selectById(userId);
+        if (user == null) {
+            throw new BusinessException(404, "用户不存在");
+        }
+        if (!passwordEncoder.matches(oldPassword, user.getPassword())) {
+            throw new BusinessException(400, "旧密码错误");
+        }
+
+        user.setPassword(passwordEncoder.encode(newPassword));
+        sysUserMapper.updateById(user);
+    }
+
+    public Map<String, Object> refreshToken(String authorization) {
+        if (authorization == null || !authorization.startsWith("Bearer ")) {
+            throw new BusinessException(401, "无效的token");
+        }
+
+        String token = authorization.substring(7);
+
+        if (!jwtUtils.validateToken(token)) {
+            throw new BusinessException(401, "token已失效");
+        }
+
+        Long userId = jwtUtils.getUserId(token);
+        String username = jwtUtils.getUsername(token);
+
+        SysUser user = sysUserMapper.selectById(userId);
+        if (user == null || user.getStatus() == 0) {
+            throw new BusinessException(401, "用户不存在或已禁用");
+        }
+
+        String newToken = jwtUtils.generateToken(userId, username);
+
+        Map<String, Object> result = new HashMap<>();
+        result.put("token", newToken);
+        result.put("userId", userId);
+        result.put("username", username);
+        result.put("realName", user.getRealName());
+
+        return result;
     }
 }

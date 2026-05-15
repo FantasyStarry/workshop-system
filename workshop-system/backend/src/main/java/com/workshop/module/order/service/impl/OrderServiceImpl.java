@@ -2,6 +2,7 @@ package com.workshop.module.order.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.workshop.common.constant.QrCodeStatus;
 import com.workshop.common.exception.BusinessException;
 import com.workshop.module.order.dto.OrderCreateDTO;
 import com.workshop.module.order.dto.OrderDetailDTO;
@@ -15,6 +16,8 @@ import com.workshop.module.order.mapper.OrderFileMapper;
 import com.workshop.module.order.mapper.OrderItemMapper;
 import com.workshop.module.order.mapper.OrderMapper;
 import com.workshop.module.order.service.OrderService;
+import com.workshop.module.production.entity.QrCode;
+import com.workshop.module.production.mapper.QrCodeMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -29,6 +32,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @Service
 public class OrderServiceImpl implements OrderService {
@@ -41,6 +45,9 @@ public class OrderServiceImpl implements OrderService {
 
     @Autowired
     private OrderFileMapper orderFileMapper;
+
+    @Autowired
+    private QrCodeMapper qrCodeMapper;
 
     private String generateOrderNo() {
         String today = LocalDate.now().toString().replace("-", "");
@@ -170,6 +177,18 @@ public class OrderServiceImpl implements OrderService {
         if (order == null) {
             throw new BusinessException(404, "订单不存在");
         }
+
+        // 将该订单下所有二维码置为报废状态，防止继续扫码使用
+        List<OrderItem> items = orderItemMapper.selectList(
+                new LambdaQueryWrapper<OrderItem>().eq(OrderItem::getOrderId, id));
+        if (!items.isEmpty()) {
+            List<Long> itemIds = items.stream().map(OrderItem::getId).collect(Collectors.toList());
+            QrCode qrUpdate = new QrCode();
+            qrUpdate.setStatus(QrCodeStatus.SCRAPPED.getCode());
+            qrCodeMapper.update(qrUpdate,
+                    new LambdaQueryWrapper<QrCode>().in(QrCode::getOrderItemId, itemIds));
+        }
+
         // Delete related items and files
         orderItemMapper.delete(new LambdaQueryWrapper<OrderItem>().eq(OrderItem::getOrderId, id));
         orderFileMapper.delete(new LambdaQueryWrapper<OrderFile>().eq(OrderFile::getOrderId, id));

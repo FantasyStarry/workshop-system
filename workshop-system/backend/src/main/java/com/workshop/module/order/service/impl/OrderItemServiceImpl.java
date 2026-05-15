@@ -34,6 +34,7 @@ public class OrderItemServiceImpl implements OrderItemService {
         );
     }
 
+    @Override
     public List<OrderItemResponseDTO> getWithProductInfo(Long orderId) {
         List<OrderItem> items = getByOrderId(orderId);
         if (items.isEmpty()) {
