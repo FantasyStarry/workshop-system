@@ -66,3 +66,6 @@ uploads/
 # Local application configuration (contains secrets)
 application.yml
 application-*.yml
+
+# Secret cleanup script
+clean-secret.bat
