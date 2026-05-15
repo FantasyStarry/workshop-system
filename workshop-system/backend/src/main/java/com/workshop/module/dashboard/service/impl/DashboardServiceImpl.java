@@ -82,7 +82,7 @@ public class DashboardServiceImpl implements DashboardService {
                 todayEnd.format(fmt));
 
         // 查询每天完成数
-        List<Map<String, Object>> completeTrend = productionRecordMapper.selectDailyCompleteTrend(
+        List<Map<String, Object>> completeTrend = qrCodeMapper.selectDailyCompleteTrend(
                 sevenDaysAgo.atStartOfDay().format(fmt),
                 todayEnd.format(fmt));
 

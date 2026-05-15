@@ -40,12 +40,4 @@ public interface ProductionRecordMapper extends BaseMapper<ProductionRecord> {
             "ORDER BY record_date ASC")
     List<Map<String, Object>> selectDailyScanTrend(@Param("startDate") String startDate,
                                                    @Param("endDate") String endDate);
-
-    @Select("SELECT DATE(generated_at) AS record_date, COUNT(*) AS day_count " +
-            "FROM qr_codes " +
-            "WHERE status = 2 AND generated_at >= #{startDate} AND generated_at <= #{endDate} " +
-            "GROUP BY DATE(generated_at) " +
-            "ORDER BY record_date ASC")
-    List<Map<String, Object>> selectDailyCompleteTrend(@Param("startDate") String startDate,
-                                                       @Param("endDate") String endDate);
 }
