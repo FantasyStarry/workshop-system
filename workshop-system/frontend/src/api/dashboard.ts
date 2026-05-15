@@ -7,7 +7,7 @@ export interface DashboardOverview {
   monthCompleteCount: number;
   inProductionCount: number;
   stageDistribution: { stageName: string; count: number }[];
-  last7DaysTrend: { date: string; count: number }[];
+  last7DaysTrend: { date: string; scanCount: number; completeCount: number }[];
 }
 
 export function getDashboardOverview(): Promise<ApiResult<DashboardOverview>> {

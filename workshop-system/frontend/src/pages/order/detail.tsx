@@ -1,13 +1,14 @@
 import React, { useEffect, useState } from 'react';
-import { Card, Descriptions, Tabs, Table, Tag, message, Spin } from 'antd';
+import { Card, Descriptions, Tabs, Table, Tag, message, Spin, Steps, Timeline } from 'antd';
 import { useParams } from 'react-router-dom';
 import dayjs from 'dayjs';
 import { getOrderDetail, deleteOrderFile } from '../../api/order';
 import { getRecordsByOrder } from '../../api/record';
+import { getStageList } from '../../api/stage';
 import FileUploader from '../../components/FileUploader';
 import ImagePreview from '../../components/ImagePreview';
 import type { Order, OrderItem, OrderFile } from '../../types/order';
-import type { ProductionRecord } from '../../types/production';
+import type { ProductionRecord, ProductionStage } from '../../types/production';
 
 const statusMap: Record<number, { label: string; color: string }> = {
   0: { label: '待确认', color: 'default' },
@@ -29,6 +30,7 @@ const OrderDetailPage: React.FC = () => {
   const [items, setItems] = useState<OrderItem[]>([]);
   const [files, setFiles] = useState<OrderFile[]>([]);
   const [records, setRecords] = useState<ProductionRecord[]>([]);
+  const [stages, setStages] = useState<ProductionStage[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -38,15 +40,18 @@ const OrderDetailPage: React.FC = () => {
   const loadData = async () => {
     setLoading(true);
     try {
-      const [detailRes, recordsRes] = await Promise.all([
+      const [detailRes, recordsRes, stagesRes] = await Promise.all([
         getOrderDetail(Number(id)),
         getRecordsByOrder(Number(id)).catch(() => ({ data: [] })),
+        getStageList().catch(() => ({ data: [] })),
       ]);
       const detail = detailRes.data;
       setOrder(detail.order);
       setItems(detail.items || []);
       setFiles(detail.files || []);
       setRecords(recordsRes.data);
+      const stageList = (stagesRes.data || []).sort((a: ProductionStage, b: ProductionStage) => a.stageSeq - b.stageSeq);
+      setStages(stageList);
     } catch {
       // handled
     } finally {
@@ -66,6 +71,71 @@ const OrderDetailPage: React.FC = () => {
     } catch {
       // handled
     }
+  };
+
+  const getStepItems = (recordIds: Set<number>, currentStageId?: number) => {
+    return stages.map((stage) => {
+      let status: 'wait' | 'process' | 'finish' = 'wait';
+      if (recordIds.has(stage.id)) {
+        status = 'finish';
+      } else if (currentStageId === stage.id) {
+        status = 'process';
+      }
+      return { title: stage.stageName, status };
+    });
+  };
+
+  // Group records by orderItemId
+  const groupedProgress = React.useMemo(() => {
+    const groups: Record<number, { item: OrderItem; records: ProductionRecord[] }> = {};
+    const unmatchedRecords: ProductionRecord[] = [];
+    
+    for (const rec of records) {
+      const item = items.find((i) => i.id === rec.orderItemId);
+      if (item) {
+        if (!groups[item.id]) {
+          groups[item.id] = { item, records: [] };
+        }
+        groups[item.id].records.push(rec);
+      } else {
+        unmatchedRecords.push(rec);
+      }
+    }
+    
+    return { groups, unmatchedRecords };
+  }, [records, items]);
+
+  const renderProgressItem = (item: OrderItem, itemRecords: ProductionRecord[]) => {
+    const completedStageIds = new Set(itemRecords.map((r) => r.stageId));
+    const lastRecord = itemRecords.reduce((latest, r) =>
+      new Date(r.scanTime).getTime() > new Date(latest.scanTime).getTime() ? r : latest
+    , itemRecords[0]);
+    const sortedRecords = [...itemRecords].sort(
+      (a, b) => new Date(a.scanTime).getTime() - new Date(b.scanTime).getTime()
+    );
+    
+    return (
+      <div key={item.id} style={{ marginBottom: 24, padding: 16, border: '1px solid #f0f0f0', borderRadius: 8 }}>
+        <h4 style={{ marginBottom: 12 }}>
+          {item.productName}（{item.productCode}）
+          <Tag style={{ marginLeft: 8 }} color={item.productionStatus === 2 ? 'success' : item.productionStatus === 1 ? 'processing' : 'default'}>
+            {prodStatusMap[item.productionStatus]?.label || '未知'}
+          </Tag>
+        </h4>
+        <Steps size="small" items={getStepItems(completedStageIds, lastRecord?.stageId) as any} />
+        <Timeline style={{ marginTop: 16 }}>
+          {sortedRecords.map((rec) => (
+            <Timeline.Item key={rec.id} color="green">
+              <strong>{rec.stageName}</strong>
+              <Tag color="blue" style={{ marginLeft: 8 }}>{rec.operatorName || '系统'}</Tag>
+              <div style={{ color: '#999', fontSize: 12, marginTop: 4 }}>
+                {dayjs(rec.scanTime).format('YYYY-MM-DD HH:mm:ss')}
+              </div>
+            </Timeline.Item>
+          ))}
+        </Timeline>
+      </div>
+    );
   };
 
   if (loading) {
@@ -149,28 +219,23 @@ const OrderDetailPage: React.FC = () => {
       label: '生产进度',
       children: (
         <div>
-          {records.length > 0 ? (
-            <Table
-              dataSource={records}
-              rowKey="id"
-              pagination={false}
-              columns={[
-                { title: '产品', dataIndex: 'productName', key: 'productName', render: (v: string, record: ProductionRecord) => `${v || '-'} (${record.productCode || '-'})` },
-                { title: '环节', dataIndex: 'stageName', key: 'stageName' },
-                { title: '操作人', dataIndex: 'operatorName', key: 'operatorName', render: (v: string) => v || '-' },
-                { title: '扫码时间', dataIndex: 'scanTime', key: 'scanTime', render: (v: string) => v ? dayjs(v).format('YYYY-MM-DD HH:mm:ss') : '-' },
-                {
-                  title: '质检结果',
-                  dataIndex: 'qcResult',
-                  key: 'qcResult',
-                  render: (v: number | null) => {
-                    if (v == null) return <Tag color="default">未质检</Tag>;
-                    return <Tag color={v === 1 ? 'green' : 'red'}>{v === 1 ? '合格' : '不合格'}</Tag>;
-                  },
-                },
-              ]}
-            />
-          ) : (
+          {Object.keys(groupedProgress.groups).length > 0 ? (
+            Object.values(groupedProgress.groups).map((g) =>
+              renderProgressItem(g.item, g.records)
+            )
+          ) : groupedProgress.unmatchedRecords.length > 0 ? (
+            <div>
+              <p style={{ color: '#999', marginBottom: 12 }}>以下记录未能关联到订单产品明细：</p>
+              <Table dataSource={groupedProgress.unmatchedRecords} rowKey="id" pagination={false}
+                columns={[
+                  { title: '产品', dataIndex: 'productName', key: 'productName' },
+                  { title: '环节', dataIndex: 'stageName', key: 'stageName' },
+                  { title: '操作人', dataIndex: 'operatorName', key: 'operatorName', render: (v: string) => v || '-' },
+                  { title: '扫码时间', dataIndex: 'scanTime', key: 'scanTime', render: (v: string) => v ? dayjs(v).format('YYYY-MM-DD HH:mm:ss') : '-' },
+                ]} />
+            </div>
+          ) : null}
+          {records.length === 0 && (
             <div style={{ color: '#999', textAlign: 'center', padding: 40 }}>暂无生产记录</div>
           )}
         </div>

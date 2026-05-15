@@ -1,13 +1,20 @@
 import React, { useEffect, useState } from 'react';
-import { Card, Select, Table, Steps, Timeline, Tag, Spin } from 'antd';
+import { Card, Select, Table, Steps, Timeline, Tag, Spin, Collapse } from 'antd';
 import { ClockCircleOutlined } from '@ant-design/icons';
 import { getOrderPage, getOrderItems } from '../../api/order';
-import { getRecordsByOrder, getRecordsByQrCode } from '../../api/record';
+import { getRecordsByOrder } from '../../api/record';
 import { getStageList } from '../../api/stage';
 import { getQrCodePage } from '../../api/qrcode';
 import type { Order, OrderItem } from '../../types/order';
 import type { ProductionStage, ProductionRecord, QrCode } from '../../types/production';
 import dayjs from 'dayjs';
+
+const qrStatusMap: Record<number, { label: string; color: string }> = {
+  0: { label: '待生产', color: 'default' },
+  1: { label: '生产中', color: 'processing' },
+  2: { label: '已完成', color: 'success' },
+  3: { label: '已报废', color: 'error' },
+};
 
 const ProgressPage: React.FC = () => {
   const [orders, setOrders] = useState<Order[]>([]);
@@ -53,21 +60,33 @@ const ProgressPage: React.FC = () => {
       const allRecords = recordsRes.data;
 
       const data = items.map((item) => {
-        const itemQrCodes = qrCodes.filter((q) => q.productId === item.productId);
-        const itemRecords = allRecords.filter((r) =>
-          itemQrCodes.some((q) => q.id === r.qrCodeId)
-        );
-        const completedStageIds = new Set(itemRecords.map((r) => r.stageId));
-        const lastRecord = itemRecords.length > 0
-          ? itemRecords.reduce((latest, r) =>
+        const itemQrCodes = qrCodes.filter((q) => q.orderItemId === item.id);
+
+        // Per-QR-code breakdown
+        const qrWithRecords = itemQrCodes.map((qr) => {
+          const qrRecords = allRecords.filter((r) => r.qrCodeId === qr.id);
+          const completedStageIds = new Set(qrRecords.map((r) => r.stageId));
+          const lastRecord = qrRecords.length > 0
+            ? qrRecords.reduce((latest, r) =>
+                new Date(r.scanTime).getTime() > new Date(latest.scanTime).getTime() ? r : latest
+              )
+            : null;
+          return { ...qr, records: qrRecords, completedStageIds, lastRecord };
+        });
+
+        // Overall item progress (union across all QR codes)
+        const allItemRecords = qrWithRecords.flatMap((qr) => qr.records);
+        const completedStageIds = new Set(allItemRecords.map((r) => r.stageId));
+        const lastRecord = allItemRecords.length > 0
+          ? allItemRecords.reduce((latest, r) =>
               new Date(r.scanTime).getTime() > new Date(latest.scanTime).getTime() ? r : latest
             )
           : null;
 
         return {
           ...item,
-          qrCodes: itemQrCodes,
-          records: itemRecords,
+          qrCodes: qrWithRecords,
+          records: allItemRecords,
           completedStageIds,
           lastRecord,
         };
@@ -130,7 +149,7 @@ const ProgressPage: React.FC = () => {
             { title: '产品编号', dataIndex: 'productCode', key: 'productCode', width: 120 },
             { title: '产品名称', dataIndex: 'productName', key: 'productName', width: 150 },
             {
-              title: '生产环节进度',
+              title: '总体进度',
               key: 'progress',
               render: (_: any, record: any) => (
                 <Steps
@@ -141,47 +160,101 @@ const ProgressPage: React.FC = () => {
               ),
             },
             {
-              title: '二维码数量',
+              title: '二维码',
               key: 'qrCount',
-              width: 100,
+              width: 80,
               render: (_: any, record: any) => record.qrCodes.length,
             },
           ]}
           expandable={{
             expandedRowRender: (record: any) => (
               <div style={{ padding: '8px 0' }}>
-                {record.records.length > 0 ? (
-                  <Timeline>
-                    {record.records
-                      .sort(
-                        (a: ProductionRecord, b: ProductionRecord) =>
-                          new Date(a.scanTime).getTime() - new Date(b.scanTime).getTime()
-                      )
-                      .map((rec: ProductionRecord) => (
-                        <Timeline.Item key={rec.id} color="green">
-                          <div>
-                            <strong>{rec.stageName}</strong>
-                            <Tag color="blue" style={{ marginLeft: 8 }}>
-                              {rec.operatorName || '系统'}
-                            </Tag>
-                            <div style={{ color: '#999', fontSize: 12, marginTop: 4 }}>
-                              <ClockCircleOutlined style={{ marginRight: 4 }} />
-                              {dayjs(rec.scanTime).format('YYYY-MM-DD HH:mm:ss')}
-                            </div>
-                            {rec.qcResult != null && (
-                              <div style={{ marginTop: 4 }}>
-                                质检：
-                                <Tag color={rec.qcResult === 1 ? 'green' : 'red'}>
-                                  {rec.qcResult === 1 ? '合格' : '不合格'}
-                                </Tag>
-                              </div>
-                            )}
-                          </div>
-                        </Timeline.Item>
-                      ))}
-                  </Timeline>
+                {record.qrCodes.length > 0 ? (
+                  record.qrCodes.map((qr: any) => {
+                    const qrStatus = qrStatusMap[qr.status] || { label: '未知', color: 'default' };
+                    return (
+                      <div
+                        key={qr.id}
+                        style={{
+                          marginBottom: 16,
+                          padding: 16,
+                          border: '1px solid #f0f0f0',
+                          borderRadius: 8,
+                          backgroundColor: '#fafafa',
+                        }}
+                      >
+                        {/* QR code header */}
+                        <div style={{ marginBottom: 12, display: 'flex', alignItems: 'center', gap: 8 }}>
+                          <Tag color="cyan" style={{ fontSize: 13, padding: '2px 10px' }}>
+                            序列号 #{qr.serialNo}
+                          </Tag>
+                          <Tag color={qrStatus.color}>{qrStatus.label}</Tag>
+                          {qr.lastRecord && (
+                            <span style={{ fontSize: 12, color: '#999' }}>
+                              最近：{dayjs(qr.lastRecord.scanTime).format('MM-DD HH:mm')}
+                            </span>
+                          )}
+                        </div>
+
+                        {/* Steps per QR code */}
+                        <Steps
+                          size="small"
+                          items={getStepItems(qr.completedStageIds, qr.lastRecord?.stageId) as any}
+                          style={{ minWidth: 400 }}
+                        />
+
+                        {/* Timeline (collapsible) */}
+                        {qr.records.length > 0 ? (
+                          <Collapse
+                            ghost
+                            size="small"
+                            style={{ marginTop: 12 }}
+                            items={[
+                              {
+                                key: 'timeline',
+                                label: `操作记录（${qr.records.length} 条）`,
+                                children: (
+                                  <Timeline>
+                                    {[...qr.records]
+                                      .sort(
+                                        (a: ProductionRecord, b: ProductionRecord) =>
+                                          new Date(a.scanTime).getTime() - new Date(b.scanTime).getTime()
+                                      )
+                                      .map((rec: ProductionRecord) => (
+                                        <Timeline.Item key={rec.id} color="green">
+                                          <div>
+                                            <strong>{rec.stageName}</strong>
+                                            <Tag color="blue" style={{ marginLeft: 8 }}>
+                                              {rec.operatorName || '系统'}
+                                            </Tag>
+                                            <div style={{ color: '#999', fontSize: 12, marginTop: 4 }}>
+                                              <ClockCircleOutlined style={{ marginRight: 4 }} />
+                                              {dayjs(rec.scanTime).format('YYYY-MM-DD HH:mm:ss')}
+                                            </div>
+                                            {rec.qcResult != null && (
+                                              <div style={{ marginTop: 4 }}>
+                                                质检：
+                                                <Tag color={rec.qcResult === 1 ? 'green' : 'red'}>
+                                                  {rec.qcResult === 1 ? '合格' : '不合格'}
+                                                </Tag>
+                                              </div>
+                                            )}
+                                          </div>
+                                        </Timeline.Item>
+                                      ))}
+                                  </Timeline>
+                                ),
+                              },
+                            ]}
+                          />
+                        ) : (
+                          <div style={{ color: '#999', fontSize: 12, marginTop: 12 }}>暂无操作记录</div>
+                        )}
+                      </div>
+                    );
+                  })
                 ) : (
-                  <span style={{ color: '#999' }}>暂无流转记录</span>
+                  <span style={{ color: '#999' }}>暂未生成二维码</span>
                 )}
               </div>
             ),

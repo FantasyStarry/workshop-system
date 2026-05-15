@@ -43,26 +43,26 @@ public class DashboardServiceImpl implements DashboardService {
         Long todayScans = productionRecordMapper.selectCount(
                 new LambdaQueryWrapper<ProductionRecord>()
                         .ge(ProductionRecord::getCreatedAt, todayStart));
-        data.put("todayScans", todayScans);
+        data.put("todayScanCount", todayScans);
 
         // 生产中订单数
-        Long inProductionOrders = orderMapper.selectCount(
+        Long activeOrderCount = orderMapper.selectCount(
                 new LambdaQueryWrapper<Order>().eq(Order::getStatus, 1));
-        data.put("inProductionOrders", inProductionOrders);
+        data.put("activeOrderCount", activeOrderCount);
 
         // 本月完成产品数
         LocalDateTime monthStart = LocalDate.now().withDayOfMonth(1).atStartOfDay();
-        Long completedThisMonth = qrCodeMapper.selectCount(
+        Long monthCompleteCount = qrCodeMapper.selectCount(
                 new LambdaQueryWrapper<QrCode>()
                         .eq(QrCode::getStatus, 2)
                         .ge(QrCode::getGeneratedAt, monthStart));
-        data.put("completedThisMonth", completedThisMonth);
+        data.put("monthCompleteCount", monthCompleteCount);
 
         // 在制品数量
-        Long wipCount = qrCodeMapper.selectCount(
+        Long inProductionCount = qrCodeMapper.selectCount(
                 new LambdaQueryWrapper<QrCode>()
                         .in(QrCode::getStatus, 0, 1));
-        data.put("wipCount", wipCount);
+        data.put("inProductionCount", inProductionCount);
 
         // 各环节在制品分布
         List<Map<String, Object>> stageDistribution = productionStageMapper.selectStageDistribution();
@@ -92,7 +92,7 @@ public class DashboardServiceImpl implements DashboardService {
             dayData.put("completeCount", completeCount);
             trend.add(dayData);
         }
-        data.put("trend", trend);
+        data.put("last7DaysTrend", trend);
 
         return Result.ok(data);
     }

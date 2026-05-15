@@ -45,7 +45,8 @@ const DashboardPage: React.FC = () => {
 
   const trendColumns = [
     { title: '日期', dataIndex: 'date', key: 'date' },
-    { title: '扫码次数', dataIndex: 'count', key: 'count' },
+    { title: '扫码次数', dataIndex: 'scanCount', key: 'scanCount' },
+    { title: '完成数', dataIndex: 'completeCount', key: 'completeCount' },
   ];
 
   return (
