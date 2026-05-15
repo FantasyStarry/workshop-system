@@ -4,6 +4,7 @@ import com.workshop.auth.dto.LoginDTO;
 import com.workshop.auth.dto.LoginResultDTO;
 import com.workshop.common.exception.BusinessException;
 import com.workshop.common.result.Result;
+import com.workshop.common.utils.JwtUtils;
 import com.workshop.module.sys.entity.SysUser;
 import com.workshop.module.sys.mapper.SysUserMapper;
 import jakarta.servlet.http.HttpServletRequest;
@@ -11,6 +12,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.HashMap;
 import java.util.Map;
 
 @RestController
@@ -25,6 +27,9 @@ public class LoginController {
 
     @Autowired
     private BCryptPasswordEncoder passwordEncoder;
+
+    @Autowired
+    private JwtUtils jwtUtils;
 
     @PostMapping("/login")
     public Result<LoginResultDTO> login(@RequestBody LoginDTO dto) {
@@ -68,5 +73,37 @@ public class LoginController {
         sysUserMapper.updateById(user);
 
         return Result.ok();
+    }
+
+    @PostMapping("/refresh")
+    public Result<Map<String, Object>> refresh(HttpServletRequest request) {
+        String authorization = request.getHeader("Authorization");
+        if (authorization == null || !authorization.startsWith("Bearer ")) {
+            throw new BusinessException(401, "无效的token");
+        }
+
+        String token = authorization.substring(7);
+        
+        if (!jwtUtils.validateToken(token)) {
+            throw new BusinessException(401, "token已失效");
+        }
+
+        Long userId = jwtUtils.getUserId(token);
+        String username = jwtUtils.getUsername(token);
+
+        SysUser user = sysUserMapper.selectById(userId);
+        if (user == null || user.getStatus() == 0) {
+            throw new BusinessException(401, "用户不存在或已禁用");
+        }
+
+        String newToken = jwtUtils.generateToken(userId, username);
+
+        Map<String, Object> result = new HashMap<>();
+        result.put("token", newToken);
+        result.put("userId", userId);
+        result.put("username", username);
+        result.put("realName", user.getRealName());
+
+        return Result.ok(result);
     }
 }

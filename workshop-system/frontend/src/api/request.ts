@@ -7,11 +7,75 @@ const request = axios.create({
   timeout: 30000,
 });
 
+let isRefreshing = false;
+let refreshQueue: Array<(token: string) => void> = [];
+
+function getTokenExpirationTime(token: string): number {
+  try {
+    const payload = token.split('.')[1];
+    const decoded = JSON.parse(atob(payload));
+    return decoded.exp * 1000;
+  } catch {
+    return 0;
+  }
+}
+
+function isTokenExpiringSoon(token: string, minutesBeforeExpiry: number = 5): boolean {
+  const expiryTime = getTokenExpirationTime(token);
+  const currentTime = Date.now();
+  return expiryTime > 0 && (expiryTime - currentTime) < (minutesBeforeExpiry * 60 * 1000);
+}
+
+async function refreshToken(): Promise<string> {
+  const token = localStorage.getItem('token');
+  if (!token) {
+    throw new Error('没有token');
+  }
+
+  const response = await axios.post('/api/auth/refresh', {}, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+
+  const data = response.data as ApiResult;
+  if (data.code === 200 && data.data?.token) {
+    return data.data.token;
+  }
+  throw new Error(data.message || '刷新token失败');
+}
+
 request.interceptors.request.use(
-  (config) => {
+  async (config) => {
     const token = localStorage.getItem('token');
     if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
+      if (isTokenExpiringSoon(token) && !isRefreshing && config.url !== '/auth/refresh') {
+        isRefreshing = true;
+        try {
+          const newToken = await refreshToken();
+          localStorage.setItem('token', newToken);
+          config.headers.Authorization = `Bearer ${newToken}`;
+          
+          refreshQueue.forEach((callback) => callback(newToken));
+          refreshQueue = [];
+        } catch (error) {
+          localStorage.removeItem('token');
+          localStorage.removeItem('userInfo');
+          window.location.href = '/login';
+          return Promise.reject(error);
+        } finally {
+          isRefreshing = false;
+        }
+      } else if (isRefreshing && config.url !== '/auth/refresh') {
+        return new Promise((resolve) => {
+          refreshQueue.push((newToken: string) => {
+            config.headers.Authorization = `Bearer ${newToken}`;
+            resolve(config);
+          });
+        });
+      } else {
+        config.headers.Authorization = `Bearer ${token}`;
+      }
     }
     return config;
   },

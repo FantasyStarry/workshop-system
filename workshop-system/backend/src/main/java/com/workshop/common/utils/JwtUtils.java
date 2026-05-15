@@ -69,4 +69,19 @@ public class JwtUtils {
                 .parseSignedClaims(token)
                 .getPayload();
     }
+
+    public long getExpirationTime(String token) {
+        Claims claims = parseToken(token);
+        return claims.getExpiration().getTime();
+    }
+
+    public boolean isTokenExpiringSoon(String token, long minutesBeforeExpiry) {
+        try {
+            long expiryTime = getExpirationTime(token);
+            long currentTime = System.currentTimeMillis();
+            return (expiryTime - currentTime) < (minutesBeforeExpiry * 60 * 1000);
+        } catch (Exception e) {
+            return true;
+        }
+    }
 }
