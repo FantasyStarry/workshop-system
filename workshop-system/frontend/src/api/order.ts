@@ -14,7 +14,13 @@ export function getOrderPage(params: {
   return request.get('/orders/page', { params }).then((res) => res.data);
 }
 
-export function getOrderDetail(id: number): Promise<ApiResult<Order>> {
+export interface OrderDetailDTO {
+  order: Order;
+  items: OrderItem[];
+  files: OrderFile[];
+}
+
+export function getOrderDetail(id: number): Promise<ApiResult<OrderDetailDTO>> {
   return request.get(`/orders/${id}`).then((res) => res.data);
 }
 

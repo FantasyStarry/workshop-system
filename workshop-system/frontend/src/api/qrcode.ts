@@ -5,6 +5,7 @@ import type { QrCode } from '../types/production';
 export interface QrCodeDetail {
   id: number;
   qrContent: string;
+  orderItemId: number;
   serialNo: string;
   status: number;
   statusText: string;

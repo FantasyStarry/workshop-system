@@ -162,7 +162,7 @@ const ProgressPage: React.FC = () => {
                           <div>
                             <strong>{rec.stageName}</strong>
                             <Tag color="blue" style={{ marginLeft: 8 }}>
-                              {rec.operator || '系统'}
+                              {rec.operatorName || '系统'}
                             </Tag>
                             <div style={{ color: '#999', fontSize: 12, marginTop: 4 }}>
                               <ClockCircleOutlined style={{ marginRight: 4 }} />
