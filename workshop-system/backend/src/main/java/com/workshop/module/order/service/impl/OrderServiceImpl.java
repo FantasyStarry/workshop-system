@@ -42,12 +42,18 @@ public class OrderServiceImpl implements OrderService {
     @Autowired
     private CodeGenerator codeGenerator;
 
-    private synchronized String generateOrderNo() {
+    private String generateOrderNo() {
         String today = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyyMMdd"));
-        String prefix = "ORD" + today;
-        Integer maxSeq = orderMapper.getMaxOrderSeq(prefix);
-        int seq = (maxSeq != null ? maxSeq : 0) + 1;
-        return prefix + String.format("%03d", seq);
+        String uuid = generateUuidV7().substring(0, 8);
+        return "ORD" + today + uuid;
+    }
+
+    private String generateUuidV7() {
+        long timestamp = System.currentTimeMillis();
+        long random = (long) (Math.random() * 0xFFFF_FFFF_FFFFL) | 0x8000_0000_0000L;
+        long msb = (timestamp << 48) | 0x7000000000000000L;
+        long lsb = random;
+        return String.format("%016x%016x", msb, lsb);
     }
 
     @Override

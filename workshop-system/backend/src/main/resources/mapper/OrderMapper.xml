@@ -47,9 +47,4 @@
         </where>
     </select>
 
-    <select id="getMaxOrderSeq" resultType="java.lang.Integer">
-        SELECT MAX(CAST(RIGHT(order_no, 3) AS UNSIGNED)) FROM orders 
-        WHERE order_no LIKE CONCAT(#{prefix}, '%')
-    </select>
-
 </mapper>

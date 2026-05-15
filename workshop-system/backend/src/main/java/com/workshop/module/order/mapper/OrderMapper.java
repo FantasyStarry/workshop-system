@@ -23,6 +23,4 @@ public interface OrderMapper extends BaseMapper<Order> {
                     @Param("status") Integer status,
                     @Param("startDate") String startDate,
                     @Param("endDate") String endDate);
-
-    Integer getMaxOrderSeq(@Param("prefix") String prefix);
 }
