@@ -1,0 +1,56 @@
+<view class="container">
+  <view class="info-card">
+    <view class="card-title">产品信息</view>
+    <view class="info-item">
+      <text class="label">产品名称</text>
+      <text class="value">{{productName}}</text>
+    </view>
+    <view class="info-item">
+      <text class="label">订单编号</text>
+      <text class="value">{{orderNo}}</text>
+    </view>
+    <view class="info-item">
+      <text class="label">当前工序</text>
+      <text class="value current-stage">{{currentStage}}</text>
+    </view>
+  </view>
+
+  <view class="form-card">
+    <view class="card-title">上报信息</view>
+    
+    <view class="form-item">
+      <text class="form-label">选择工序</text>
+      <picker mode="selector" range="{{stages}}" range-key="stageName" bindchange="onStageChange">
+        <view class="picker-value">
+          <text>{{selectedStageName || '请选择工序'}}</text>
+          <text class="picker-arrow">›</text>
+        </view>
+      </picker>
+    </view>
+
+    <view class="form-item">
+      <text class="form-label">当前位置</text>
+      <view class="location-row">
+        <input class="form-input" placeholder="输入位置信息" value="{{location}}" bindinput="onLocationInput" />
+        <button class="location-btn" bindtap="getLocation">获取位置</button>
+      </view>
+    </view>
+
+    <view class="form-item">
+      <text class="form-label">温度 (℃)</text>
+      <input class="form-input" type="digit" placeholder="输入温度" value="{{temperature}}" bindinput="onTemperatureInput" />
+    </view>
+
+    <view class="form-item">
+      <text class="form-label">湿度 (%)</text>
+      <input class="form-input" type="digit" placeholder="输入湿度" value="{{humidity}}" bindinput="onHumidityInput" />
+    </view>
+
+    <view class="form-item">
+      <text class="form-label">备注</text>
+      <textarea class="form-textarea" placeholder="输入备注信息" value="{{remark}}" bindinput="onRemarkInput" />
+    </view>
+  </view>
+
+  <button class="submit-btn" bindtap="handleSubmit">确认上报</button>
+</view>

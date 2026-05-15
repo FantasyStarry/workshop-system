@@ -1,0 +1,27 @@
+<view class="container">
+  <view class="scan-area" bindtap="handleScan">
+    <view class="scan-icon">
+      <text class="icon">📷</text>
+    </view>
+    <text class="scan-text">点击扫码</text>
+    <text class="scan-hint">扫描二维码进行生产进度上报</text>
+  </view>
+  
+  <view class="history-section">
+    <view class="section-title">
+      <text>最近上报记录</text>
+    </view>
+    <view class="history-list" wx:for="{{recentRecords}}" wx:key="id">
+      <view class="history-item">
+        <view class="item-info">
+          <text class="item-product">{{item.productName}}</text>
+          <text class="item-stage">{{item.stageName}}</text>
+        </view>
+        <text class="item-time">{{item.createTime}}</text>
+      </view>
+    </view>
+    <view class="empty-hint" wx:if="{{recentRecords.length === 0}}">
+      <text>暂无上报记录</text>
+    </view>
+  </view>
+</view>
