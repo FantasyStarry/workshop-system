@@ -10,8 +10,8 @@ spring:
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
     url: jdbc:mysql://localhost:3306/workshop_db?useUnicode=true&characterEncoding=UTF-8&serverTimezone=Asia/Shanghai
-    username: your_db_username
-    password: your_db_password
+    username: root
+    password: your_password
   servlet:
     multipart:
       max-file-size: 50MB
@@ -28,7 +28,7 @@ mybatis-plus:
     log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
 
 jwt:
-  secret: your-jwt-secret-key-at-least-32-characters-long
+  secret: change-me-to-a-random-long-string
   expiration: 86400000
 
 file:
@@ -43,6 +43,6 @@ knife4j:
   enable: true
 
 wx:
-  appid: your-wechat-miniprogram-appid
-  secret: your-wechat-miniprogram-secret
-  mock: false
+  appid: your_wx_appid
+  secret: your_wx_secret
+  mock: true

@@ -62,3 +62,7 @@ _book/
 
 # Uploaded files
 uploads/
+
+# Local application configuration (contains secrets)
+application.yml
+application-*.yml
