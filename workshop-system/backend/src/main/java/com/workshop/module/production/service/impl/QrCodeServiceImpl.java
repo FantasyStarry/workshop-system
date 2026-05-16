@@ -91,9 +91,9 @@ public class QrCodeServiceImpl implements QrCodeService {
 
         List<QrCode> result = new ArrayList<>();
         int fixedQuantity = orderItem.getQuantity() != null ? orderItem.getQuantity() : 1;
+        Integer maxSerialNo = getMaxSerialNo(dto.getOrderItemId());
         for (int i = 0; i < fixedQuantity; i++) {
-            Integer maxSerialNo = getMaxSerialNo(dto.getOrderItemId());
-            int serialNo = maxSerialNo + 1;
+            int serialNo = maxSerialNo + 1 + i;
 
             String qrContent = qrCodeUtils.generateQrContent(order.getOrderNo(), product.getProductCode(), serialNo);
             String qrImagePath = qrCodeUtils.generateQrCode(qrContent);

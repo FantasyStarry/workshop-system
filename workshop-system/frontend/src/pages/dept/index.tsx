@@ -115,15 +115,18 @@ const DeptPage: React.FC = () => {
 
   const columns = [
     {
+      title: '部门编码',
+      dataIndex: 'deptCode',
+      key: 'deptCode',
+      width: 120,
+    },
+    {
       title: '部门名称',
       key: 'deptName',
       render: (_: any, record: FlatDept) => (
         <span style={{ paddingLeft: record.level * 24, display: 'inline-block' }}>
           {record.level > 0 && <span style={{ color: '#bbb', marginRight: 4 }}>└ </span>}
           {record.deptName}
-          {record.deptCode && (
-            <span style={{ color: '#999', fontSize: 12, marginLeft: 8 }}>({record.deptCode})</span>
-          )}
         </span>
       ),
     },
@@ -138,7 +141,7 @@ const DeptPage: React.FC = () => {
       title: '排序',
       dataIndex: 'sortOrder',
       key: 'sortOrder',
-      width: 70,
+      width: 80,
       align: 'center' as const,
     },
     {
@@ -200,7 +203,6 @@ const DeptPage: React.FC = () => {
         rowKey="id"
         loading={loading}
         pagination={false}
-        size="middle"
       />
 
       <Modal
@@ -211,15 +213,11 @@ const DeptPage: React.FC = () => {
         destroyOnClose
       >
         <Form form={form} layout="vertical">
-          <Form.Item
-            name="deptName"
-            label="部门名称"
-            rules={[{ required: true, message: '请输入部门名称' }]}
-          >
-            <Input placeholder="请输入部门名称" />
+          <Form.Item name="deptName" label="部门名称" rules={[{ required: true, message: '请输入部门名称' }]}>
+            <Input placeholder="如：管理部" />
           </Form.Item>
-          <Form.Item name="deptCode" label="部门编码">
-            <Input placeholder="请输入部门编码，如：DEPT_PROD" />
+          <Form.Item name="deptCode" label="部门编码" rules={[{ required: true, message: '请输入部门编码' }]}>
+            <Input placeholder="如：DEPT_ADMIN" />
           </Form.Item>
           <Form.Item name="sortOrder" label="排序序号">
             <InputNumber style={{ width: '100%' }} min={1} />

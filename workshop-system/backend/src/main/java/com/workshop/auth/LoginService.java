@@ -51,7 +51,8 @@ public class LoginService {
             throw new BusinessException(401, "用户名或密码错误");
         }
 
-        String token = jwtUtils.generateToken(user.getId(), user.getUsername());
+        List<String> roleCodes = loadRoleCodes(user.getRoleIds());
+        String token = jwtUtils.generateToken(user.getId(), user.getUsername(), roleCodes);
         LoginResultDTO result = new LoginResultDTO();
         result.setToken(token);
         result.setUserId(String.valueOf(user.getId()));
@@ -66,20 +67,7 @@ public class LoginService {
             throw new BusinessException(404, "用户不存在");
         }
 
-        List<String> roleCodes = new ArrayList<>();
-        if (user.getRoleIds() != null && !user.getRoleIds().isEmpty()) {
-            String[] ids = user.getRoleIds().split(",");
-            for (String idStr : ids) {
-                try {
-                    Long roleId = Long.parseLong(idStr.trim());
-                    SysRole role = sysRoleMapper.selectById(roleId);
-                    if (role != null) {
-                        roleCodes.add(role.getRoleCode());
-                    }
-                } catch (NumberFormatException ignored) {
-                }
-            }
-        }
+        List<String> roleCodes = loadRoleCodes(user.getRoleIds());
 
         Map<String, Object> userInfo = new HashMap<>();
         userInfo.put("id", String.valueOf(user.getId()));
@@ -133,7 +121,8 @@ public class LoginService {
             throw new BusinessException(401, "用户不存在或已禁用");
         }
 
-        String newToken = jwtUtils.generateToken(userId, username);
+        List<String> roleCodes = loadRoleCodes(user.getRoleIds());
+        String newToken = jwtUtils.generateToken(userId, username, roleCodes);
 
         Map<String, Object> result = new HashMap<>();
         result.put("token", newToken);
@@ -142,5 +131,24 @@ public class LoginService {
         result.put("realName", user.getRealName());
 
         return result;
+    }
+
+    /** 根据 roleIds 字符串（逗号分隔）加载角色编码列表 */
+    private List<String> loadRoleCodes(String roleIds) {
+        List<String> roleCodes = new ArrayList<>();
+        if (roleIds != null && !roleIds.isEmpty()) {
+            String[] ids = roleIds.split(",");
+            for (String idStr : ids) {
+                try {
+                    Long roleId = Long.parseLong(idStr.trim());
+                    SysRole role = sysRoleMapper.selectById(roleId);
+                    if (role != null) {
+                        roleCodes.add(role.getRoleCode());
+                    }
+                } catch (NumberFormatException ignored) {
+                }
+            }
+        }
+        return roleCodes;
     }
 }

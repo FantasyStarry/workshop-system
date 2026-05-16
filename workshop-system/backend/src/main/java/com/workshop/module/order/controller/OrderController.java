@@ -1,6 +1,8 @@
 package com.workshop.module.order.controller;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.workshop.auth.annotation.RequireRoles;
+import com.workshop.auth.constant.RoleConstant;
 import com.workshop.common.result.PageResult;
 import com.workshop.common.result.Result;
 import com.workshop.module.order.dto.OrderCreateDTO;
@@ -11,8 +13,6 @@ import com.workshop.module.order.service.OrderService;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.Map;
 
 @RestController
 @RequestMapping("/api/orders")
@@ -49,6 +49,7 @@ public class OrderController {
         return Result.ok(orderService.getDetail(id));
     }
 
+    @RequireRoles({RoleConstant.SALES, RoleConstant.ADMIN})
     @PostMapping
     public Result<Long> create(@RequestBody OrderCreateDTO dto, HttpServletRequest request) {
         Long userId = (Long) request.getAttribute("userId");
@@ -56,6 +57,7 @@ public class OrderController {
         return Result.ok(orderId);
     }
 
+    @RequireRoles({RoleConstant.SALES, RoleConstant.ADMIN})
     @PutMapping("/{id}")
     public Result<?> update(@PathVariable Long id, @RequestBody Order order) {
         order.setId(id);
@@ -63,12 +65,14 @@ public class OrderController {
         return Result.ok();
     }
 
+    @RequireRoles({RoleConstant.PRODUCTION, RoleConstant.ADMIN})
     @PutMapping("/{id}/status")
     public Result<?> updateStatus(@PathVariable Long id, @RequestParam Integer status) {
         orderService.updateStatus(id, status);
         return Result.ok();
     }
 
+    @RequireRoles({RoleConstant.ADMIN})
     @DeleteMapping("/{id}")
     public Result<?> delete(@PathVariable Long id) {
         orderService.delete(id);

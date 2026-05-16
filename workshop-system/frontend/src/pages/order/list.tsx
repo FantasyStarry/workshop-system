@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { Tag, Button, Popconfirm, message, Space } from 'antd';
 import { PlusOutlined, EyeOutlined, EditOutlined, DeleteOutlined } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
@@ -6,6 +6,7 @@ import ProTable from '../../components/ProTable';
 import type { SearchColumn } from '../../components/ProTable';
 import { getOrderPage, deleteOrder, updateOrderStatus } from '../../api/order';
 import type { Order } from '../../types/order';
+import { useUserStore } from '../../store/userStore';
 import dayjs from 'dayjs';
 
 const statusMap: Record<number, { label: string; color: string }> = {
@@ -20,6 +21,13 @@ const nextStatusMap: Record<number, { label: string; value: number } | null> = {
   1: null,
   2: null,
   3: null,
+};
+
+// 角色检查工具函数
+const hasAnyRole = (roleCodes: string, roles: string[]) => {
+  if (!roleCodes) return false;
+  const userRoles = roleCodes.split(',').map((r) => r.trim());
+  return roles.some((r) => userRoles.includes(r));
 };
 
 const searchColumns: SearchColumn[] = [
@@ -41,6 +49,11 @@ const searchColumns: SearchColumn[] = [
 
 const OrderListPage: React.FC = () => {
   const navigate = useNavigate();
+  const roleCodes = useUserStore((s) => s.userInfo?.roleCodes || '');
+
+  const canManage = useMemo(() => hasAnyRole(roleCodes, ['SALES', 'ADMIN']), [roleCodes]);
+  const canProduce = useMemo(() => hasAnyRole(roleCodes, ['PRODUCTION', 'ADMIN']), [roleCodes]);
+  const canDelete = useMemo(() => hasAnyRole(roleCodes, ['ADMIN']), [roleCodes]);
 
   const columns = [
     { title: '订单号', dataIndex: 'orderNo', key: 'orderNo', width: 160 },
@@ -85,15 +98,17 @@ const OrderListPage: React.FC = () => {
             >
               查看
             </Button>
-            <Button
-              type="link"
-              size="small"
-              icon={<EditOutlined />}
-              onClick={() => navigate(`/orders/${record.id}/edit`)}
-            >
-              编辑
-            </Button>
-            {nextStatus && (
+            {canManage && (
+              <Button
+                type="link"
+                size="small"
+                icon={<EditOutlined />}
+                onClick={() => navigate(`/orders/${record.id}/edit`)}
+              >
+                编辑
+              </Button>
+            )}
+            {nextStatus && canProduce && (
               <Popconfirm
                 title={`确定${nextStatus.label}吗？`}
                 onConfirm={async () => {
@@ -107,18 +122,20 @@ const OrderListPage: React.FC = () => {
                 </Button>
               </Popconfirm>
             )}
-            <Popconfirm
-              title="确定删除该订单吗？"
-              onConfirm={async () => {
-                await deleteOrder(record.id);
-                message.success('删除成功');
-                window.location.reload();
-              }}
-            >
-              <Button type="link" size="small" danger icon={<DeleteOutlined />}>
-                删除
-              </Button>
-            </Popconfirm>
+            {canDelete && (
+              <Popconfirm
+                title="确定删除该订单吗？"
+                onConfirm={async () => {
+                  await deleteOrder(record.id);
+                  message.success('删除成功');
+                  window.location.reload();
+                }}
+              >
+                <Button type="link" size="small" danger icon={<DeleteOutlined />}>
+                  删除
+                </Button>
+              </Popconfirm>
+            )}
           </Space>
         );
       },
@@ -132,9 +149,11 @@ const OrderListPage: React.FC = () => {
       searchColumns={searchColumns}
       rowKey="id"
       extraButtons={
-        <Button type="primary" icon={<PlusOutlined />} onClick={() => navigate('/orders/new')}>
-          新增订单
-        </Button>
+        canManage ? (
+          <Button type="primary" icon={<PlusOutlined />} onClick={() => navigate('/orders/new')}>
+            新增订单
+          </Button>
+        ) : undefined
       }
     />
   );

@@ -21,11 +21,11 @@ INSERT INTO `sys_department` (`dept_name`, `dept_code`, `parent_id`, `sort_order
 -- =============================================
 -- 2. 角色数据
 -- =============================================
-INSERT INTO `sys_role` (`role_name`, `role_code`, `description`) VALUES
-('管理员',   'ADMIN',      '系统管理员，拥有全部权限'),
-('销售人员', 'SALES',      '负责订单管理'),
-('生产人员', 'PRODUCTION', '负责生产操作与扫码上报'),
-('质检员',   'QC',         '负责产品质量检验');
+INSERT INTO `sys_role` (`role_name`, `role_code`, `description`, `sort_order`) VALUES
+('管理员',   'ADMIN',      '系统管理员，拥有全部权限', 1),
+('销售人员', 'SALES',      '负责订单管理', 2),
+('生产人员', 'PRODUCTION', '负责生产操作与扫码上报', 3),
+('质检员',   'QC',         '负责产品质量检验', 4);
 
 -- =============================================
 -- 3. 用户数据

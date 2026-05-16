@@ -44,5 +44,6 @@ export interface RoleItem {
   roleName: string;
   roleCode: string;
   description: string;
+  sortOrder: number;
   status: number;
 }

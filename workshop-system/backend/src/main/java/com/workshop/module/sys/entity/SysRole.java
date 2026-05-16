@@ -17,6 +17,7 @@ public class SysRole {
     private String roleName;
     private String roleCode;
     private String description;
+    private Integer sortOrder;
     private Integer status;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;

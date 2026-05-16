@@ -9,6 +9,7 @@ import org.springframework.stereotype.Component;
 import javax.crypto.SecretKey;
 import java.nio.charset.StandardCharsets;
 import java.util.Date;
+import java.util.List;
 
 @Component
 public class JwtUtils {
@@ -21,7 +22,6 @@ public class JwtUtils {
 
     private SecretKey getSigningKey() {
         byte[] keyBytes = secret.getBytes(StandardCharsets.UTF_8);
-        // Ensure key is at least 256 bits (32 bytes)
         if (keyBytes.length < 32) {
             byte[] paddedKey = new byte[32];
             System.arraycopy(keyBytes, 0, paddedKey, 0, Math.min(keyBytes.length, 32));
@@ -30,13 +30,14 @@ public class JwtUtils {
         return Keys.hmacShaKeyFor(keyBytes);
     }
 
-    public String generateToken(Long userId, String username) {
+    public String generateToken(Long userId, String username, List<String> roleCodes) {
         Date now = new Date();
         Date expiryDate = new Date(now.getTime() + expiration);
 
         return Jwts.builder()
                 .subject(String.valueOf(userId))
                 .claim("username", username)
+                .claim("roleCodes", roleCodes)
                 .issuedAt(now)
                 .expiration(expiryDate)
                 .signWith(getSigningKey())
@@ -51,6 +52,13 @@ public class JwtUtils {
     public String getUsername(String token) {
         Claims claims = parseToken(token);
         return claims.get("username", String.class);
+    }
+
+    @SuppressWarnings("unchecked")
+    public List<String> getRoleCodes(String token) {
+        Claims claims = parseToken(token);
+        List<String> roleCodes = claims.get("roleCodes", List.class);
+        return roleCodes != null ? roleCodes : List.of();
     }
 
     public boolean validateToken(String token) {

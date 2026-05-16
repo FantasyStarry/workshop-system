@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Card, Table, Button, Modal, Form, Input, Switch, message, Space, Popconfirm, Tag } from 'antd';
+import { Card, Table, Button, Modal, Form, Input, InputNumber, Switch, message, Space, Popconfirm, Tag } from 'antd';
 import { PlusOutlined, EditOutlined, DeleteOutlined } from '@ant-design/icons';
 import { getRoleList, createRole, updateRole, deleteRole } from '../../api/user';
 import type { RoleItem } from '../../types/user';
@@ -30,7 +30,7 @@ const RolePage: React.FC = () => {
   const handleAdd = () => {
     setEditingRole(null);
     form.resetFields();
-    form.setFieldsValue({ status: true });
+    form.setFieldsValue({ sortOrder: roles.length + 1, status: true });
     setModalOpen(true);
   };
 
@@ -77,6 +77,7 @@ const RolePage: React.FC = () => {
     { title: '角色编码', dataIndex: 'roleCode', key: 'roleCode', width: 120 },
     { title: '角色名称', dataIndex: 'roleName', key: 'roleName', width: 150 },
     { title: '描述', dataIndex: 'description', key: 'description', width: 200 },
+    { title: '排序', dataIndex: 'sortOrder', key: 'sortOrder', width: 80 },
     {
       title: '状态',
       dataIndex: 'status',
@@ -133,6 +134,9 @@ const RolePage: React.FC = () => {
           </Form.Item>
           <Form.Item name="roleCode" label="角色编码" rules={[{ required: true, message: '请输入角色编码' }]}>
             <Input placeholder="如：ADMIN" />
+          </Form.Item>
+          <Form.Item name="sortOrder" label="排序序号">
+            <InputNumber style={{ width: '100%' }} min={1} />
           </Form.Item>
           <Form.Item name="status" label="启用状态" valuePropName="checked">
             <Switch />

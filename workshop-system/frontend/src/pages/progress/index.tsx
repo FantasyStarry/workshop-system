@@ -31,7 +31,12 @@ const ProgressPage: React.FC = () => {
   const loadOrders = async () => {
     try {
       const res = await getOrderPage({ page: 1, pageSize: 100, status: 1 });
-      setOrders(res.data.records);
+      const list = res.data.records;
+      setOrders(list);
+      // 默认选中第一个订单，让"默认全部"真正生效
+      if (list.length > 0) {
+        handleOrderChange(list[0].id);
+      }
     } catch {
       // handled
     }

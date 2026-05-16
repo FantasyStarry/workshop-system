@@ -7,7 +7,9 @@ import com.workshop.auth.dto.WxLoginDTO;
 import com.workshop.auth.dto.WxLoginResultDTO;
 import com.workshop.common.exception.BusinessException;
 import com.workshop.common.utils.JwtUtils;
+import com.workshop.module.sys.entity.SysRole;
 import com.workshop.module.sys.entity.SysUser;
+import com.workshop.module.sys.mapper.SysRoleMapper;
 import com.workshop.module.sys.mapper.SysUserMapper;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -22,12 +24,17 @@ import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.List;
 
 @Service
 public class WxLoginService {
 
     @Autowired
     private SysUserMapper sysUserMapper;
+
+    @Autowired
+    private SysRoleMapper sysRoleMapper;
 
     @Autowired
     private BCryptPasswordEncoder passwordEncoder;
@@ -61,7 +68,8 @@ public class WxLoginService {
         WxLoginResultDTO result = new WxLoginResultDTO();
 
         if (user != null && user.getStatus() == 1) {
-            String token = jwtUtils.generateToken(user.getId(), user.getUsername());
+            List<String> roleCodes = loadRoleCodes(user.getRoleIds());
+            String token = jwtUtils.generateToken(user.getId(), user.getUsername(), roleCodes);
             result.setToken(token);
             result.setUserId(String.valueOf(user.getId()));
             result.setUsername(user.getUsername());
@@ -94,11 +102,12 @@ public class WxLoginService {
             throw new BusinessException(401, "用户名或密码错误");
         }
 
+        List<String> roleCodes = loadRoleCodes(user.getRoleIds());
+
         // 如果已绑定且 openid 未变化，直接返回；否则允许覆盖
         if (user.getWxOpenid() != null && !user.getWxOpenid().isEmpty()) {
             if (user.getWxOpenid().equals(dto.getWxOpenid())) {
-                // 同一个 openid 重复绑定，静默通过
-                String token = jwtUtils.generateToken(user.getId(), user.getUsername());
+                String token = jwtUtils.generateToken(user.getId(), user.getUsername(), roleCodes);
                 LoginResultDTO result = new LoginResultDTO();
                 result.setToken(token);
                 result.setUserId(String.valueOf(user.getId()));
@@ -106,13 +115,12 @@ public class WxLoginService {
                 result.setRealName(user.getRealName());
                 return result;
             }
-            // 新的 openid 覆盖旧的（从 mock 切换到真实，或换绑）
         }
 
         user.setWxOpenid(dto.getWxOpenid());
         sysUserMapper.updateById(user);
 
-        String token = jwtUtils.generateToken(user.getId(), user.getUsername());
+        String token = jwtUtils.generateToken(user.getId(), user.getUsername(), roleCodes);
         LoginResultDTO result = new LoginResultDTO();
         result.setToken(token);
         result.setUserId(String.valueOf(user.getId()));
@@ -122,14 +130,27 @@ public class WxLoginService {
         return result;
     }
 
-    /**
-     * 根据 wx.login 返回的 code 获取微信 openid
-     * mock=true 时返回固定格式的测试数据，不会调微信接口
-     * mock=false 时调用微信官方 jscode2session 接口
-     */
+    /** 根据 roleIds 字符串加载角色编码列表 */
+    private List<String> loadRoleCodes(String roleIds) {
+        List<String> roleCodes = new ArrayList<>();
+        if (roleIds != null && !roleIds.isEmpty()) {
+            String[] ids = roleIds.split(",");
+            for (String idStr : ids) {
+                try {
+                    Long roleId = Long.parseLong(idStr.trim());
+                    SysRole role = sysRoleMapper.selectById(roleId);
+                    if (role != null) {
+                        roleCodes.add(role.getRoleCode());
+                    }
+                } catch (NumberFormatException ignored) {
+                }
+            }
+        }
+        return roleCodes;
+    }
+
     private String getOpenidFromWx(String code) {
         if (wxMock) {
-            // 本地开发模式：基于 code 生成稳定 mock openid（同一 code 多次调用结果相同）
             try {
                 java.security.MessageDigest md = java.security.MessageDigest.getInstance("MD5");
                 byte[] digest = md.digest(code.getBytes(StandardCharsets.UTF_8));
@@ -143,7 +164,6 @@ public class WxLoginService {
             }
         }
 
-        // 真实模式：调微信接口获取 openid
         try {
             String url = "https://api.weixin.qq.com/sns/jscode2session"
                     + "?appid=" + URLEncoder.encode(wxAppid, StandardCharsets.UTF_8)

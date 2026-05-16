@@ -218,6 +218,9 @@ const QrCodePage: React.FC = () => {
     },
   ];
 
+  const selectedItem = orderItems.find((i) => i.id === selectedItemId);
+  const selectedQuantity = selectedItem?.quantity || 0;
+
   return (
     <div>
       <Card title="生成二维码" style={{ marginBottom: 16 }}>
@@ -227,7 +230,7 @@ const QrCodePage: React.FC = () => {
               <Select
                 showSearch
                 placeholder="请选择订单"
-                style={{ width: 240 }}
+                style={{ width: 360 }}
                 filterOption={(input, option) =>
                   (option?.label as string)?.toLowerCase().includes(input.toLowerCase())
                 }
@@ -241,9 +244,9 @@ const QrCodePage: React.FC = () => {
             <Form.Item label="选择产品" style={{ marginBottom: 0 }}>
               <Select
                 placeholder="请选择产品"
-                style={{ width: 280 }}
+                style={{ width: 340 }}
                 options={orderItems.map((i) => ({
-                  label: `${i.productCode} - ${i.productName}${generatedItemIds.has(i.id) ? ' (已生成)' : ''}`,
+                  label: `${i.productCode} - ${i.productName} (×${i.quantity})${generatedItemIds.has(i.id) ? ' (已生成)' : ''}`,
                   value: i.id,
                   disabled: generatedItemIds.has(i.id),
                 }))}
@@ -261,7 +264,7 @@ const QrCodePage: React.FC = () => {
               loading={generating}
               disabled={!selectedOrderId || !selectedItemId || generatedItemIds.has(selectedItemId || 0)}
             >
-              生成二维码
+              {selectedQuantity > 0 ? `生成二维码（×${selectedQuantity}张）` : '生成二维码'}
             </Button>
           </Col>
         </Row>
