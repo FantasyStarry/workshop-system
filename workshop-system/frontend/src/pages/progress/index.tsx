@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef, useCallback } from 'react';
 import { Card, Select, Table, Steps, Timeline, Tag, Spin, Collapse } from 'antd';
 import { ClockCircleOutlined } from '@ant-design/icons';
 import { getOrderPage, getOrderItems } from '../../api/order';
@@ -23,9 +23,35 @@ const ProgressPage: React.FC = () => {
   const [progressData, setProgressData] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
 
+  const timerRef = useRef<ReturnType<typeof setInterval>>();
+  const orderIdRef = useRef<number | undefined>();
+
+  /** 刷新当前选中的订单进度 */
+  const refreshProgress = useCallback(() => {
+    if (orderIdRef.current) {
+      handleOrderChange(orderIdRef.current);
+    }
+  // eslint-disable-next-line
+  }, []);
+
   useEffect(() => {
     loadOrders();
     loadStages();
+
+    // 每 30 秒自动刷新
+    timerRef.current = setInterval(refreshProgress, 30000);
+
+    // 切回页面时立即刷新
+    const onVisible = () => {
+      if (document.visibilityState === 'visible') refreshProgress();
+    };
+    document.addEventListener('visibilitychange', onVisible);
+
+    return () => {
+      if (timerRef.current) clearInterval(timerRef.current);
+      document.removeEventListener('visibilitychange', onVisible);
+    };
+  // eslint-disable-next-line
   }, []);
 
   const loadOrders = async () => {
@@ -33,8 +59,9 @@ const ProgressPage: React.FC = () => {
       const res = await getOrderPage({ page: 1, pageSize: 100, status: 1 });
       const list = res.data.records;
       setOrders(list);
-      // 默认选中第一个订单，让"默认全部"真正生效
+      // 默认选中第一个订单
       if (list.length > 0) {
+        orderIdRef.current = list[0].id;
         handleOrderChange(list[0].id);
       }
     } catch {
@@ -53,6 +80,7 @@ const ProgressPage: React.FC = () => {
 
   const handleOrderChange = async (orderId: number) => {
     setSelectedOrderId(orderId);
+    orderIdRef.current = orderId;
     setLoading(true);
     try {
       const [itemsRes, qrRes, recordsRes] = await Promise.all([
