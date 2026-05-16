@@ -1,10 +1,201 @@
-/**app.wxss**/
+page {
+  --color-primary: #4F46E5;
+  --color-primary-light: #818CF8;
+  --color-primary-lighter: #C7D2FE;
+  --color-primary-dark: #3730A3;
+  --color-primary-bg: #EEF2FF;
+
+  --color-success: #059669;
+  --color-success-bg: #ECFDF5;
+  --color-warning: #D97706;
+  --color-warning-bg: #FFFBEB;
+  --color-error: #DC2626;
+  --color-error-bg: #FEF2F2;
+  --color-info: #0284C7;
+  --color-info-bg: #F0F9FF;
+
+  --bg-page: #F8FAFC;
+  --bg-card: #FFFFFF;
+  --bg-muted: #F1F5F9;
+  --bg-input: #F8FAFC;
+
+  --text-primary: #0F172A;
+  --text-secondary: #475569;
+  --text-tertiary: #94A3B8;
+  --text-inverse: #FFFFFF;
+
+  --border-color: #E2E8F0;
+  --border-light: #F1F5F9;
+
+  --radius-sm: 12rpx;
+  --radius-md: 20rpx;
+  --radius-lg: 28rpx;
+  --radius-xl: 36rpx;
+  --radius-full: 50%;
+
+  --shadow-sm: 0 2rpx 8rpx rgba(0, 0, 0, 0.04);
+  --shadow-md: 0 8rpx 24rpx rgba(0, 0, 0, 0.06);
+  --shadow-lg: 0 16rpx 48rpx rgba(0, 0, 0, 0.08);
+  --shadow-primary: 0 8rpx 32rpx rgba(79, 70, 229, 0.25);
+
+  background-color: var(--bg-page);
+  min-height: 100vh;
+  font-family: -apple-system, BlinkMacSystemFont, 'PingFang SC', 'Microsoft YaHei', sans-serif;
+  color: var(--text-primary);
+  font-size: 28rpx;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+}
+
 .container {
-  height: 100%;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: space-between;
-  padding: 200rpx 0;
+  padding: 32rpx;
   box-sizing: border-box;
-} 
+}
+
+.card {
+  background: var(--bg-card);
+  border-radius: var(--radius-lg);
+  padding: 32rpx;
+  box-shadow: var(--shadow-sm);
+  border: 1rpx solid var(--border-light);
+}
+
+.card-title {
+  font-size: 30rpx;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 28rpx;
+  padding-bottom: 24rpx;
+  border-bottom: 1rpx solid var(--border-light);
+}
+
+.section-title {
+  font-size: 28rpx;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 20rpx;
+}
+
+.form-item {
+  margin-bottom: 28rpx;
+}
+
+.form-label {
+  display: block;
+  font-size: 26rpx;
+  color: var(--text-secondary);
+  font-weight: 500;
+  margin-bottom: 12rpx;
+}
+
+.form-input {
+  width: 100%;
+  height: 88rpx;
+  background: var(--bg-input);
+  border-radius: var(--radius-sm);
+  padding: 0 24rpx;
+  font-size: 28rpx;
+  color: var(--text-primary);
+  box-sizing: border-box;
+  border: 1rpx solid var(--border-light);
+}
+
+.form-input:focus {
+  border-color: var(--color-primary-light);
+}
+
+.form-textarea {
+  width: 100%;
+  height: 180rpx;
+  background: var(--bg-input);
+  border-radius: var(--radius-sm);
+  padding: 20rpx 24rpx;
+  font-size: 28rpx;
+  color: var(--text-primary);
+  box-sizing: border-box;
+  border: 1rpx solid var(--border-light);
+}
+
+.btn-primary {
+  width: 100%;
+  height: 96rpx;
+  background: var(--color-primary);
+  border-radius: var(--radius-md);
+  color: var(--text-inverse);
+  font-size: 32rpx;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  margin: 0;
+  border: none;
+  box-shadow: var(--shadow-primary);
+}
+
+.btn-primary::after {
+  border: none;
+}
+
+.btn-secondary {
+  width: 100%;
+  height: 96rpx;
+  background: var(--bg-muted);
+  border-radius: var(--radius-md);
+  color: var(--text-secondary);
+  font-size: 32rpx;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  margin: 0;
+  border: none;
+}
+
+.btn-secondary::after {
+  border: none;
+}
+
+.tag-primary {
+  color: var(--color-primary);
+  background: var(--color-primary-bg);
+  padding: 8rpx 20rpx;
+  border-radius: 20rpx;
+  font-size: 24rpx;
+  font-weight: 500;
+}
+
+.tag-success {
+  color: var(--color-success);
+  background: var(--color-success-bg);
+  padding: 8rpx 20rpx;
+  border-radius: 20rpx;
+  font-size: 24rpx;
+  font-weight: 500;
+}
+
+.info-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16rpx 0;
+}
+
+.info-item .label {
+  font-size: 26rpx;
+  color: var(--text-tertiary);
+}
+
+.info-item .value {
+  font-size: 28rpx;
+  color: var(--text-primary);
+  font-weight: 500;
+}
+
+.empty-hint {
+  text-align: center;
+  padding: 60rpx 0;
+  color: var(--text-tertiary);
+  font-size: 26rpx;
+}

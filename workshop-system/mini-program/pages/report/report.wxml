@@ -1,5 +1,5 @@
 <view class="container">
-  <view class="info-card">
+  <view class="card info-card">
     <view class="card-title">产品信息</view>
     <view class="info-item">
       <text class="label">产品名称</text>
@@ -11,19 +11,19 @@
     </view>
     <view class="info-item">
       <text class="label">当前工序</text>
-      <text class="value current-stage">{{currentStage}}</text>
+      <text class="tag-primary">{{currentStage}}</text>
     </view>
   </view>
 
-  <view class="form-card">
+  <view class="card form-card">
     <view class="card-title">上报信息</view>
     
     <view class="form-item">
       <text class="form-label">选择工序</text>
       <picker mode="selector" range="{{stages}}" range-key="stageName" bindchange="onStageChange">
         <view class="picker-value">
-          <text>{{selectedStageName || '请选择工序'}}</text>
-          <text class="picker-arrow">›</text>
+          <text class="{{selectedStageName ? 'picker-text-active' : 'picker-text'}}">{{selectedStageName || '请选择工序'}}</text>
+          <text class="picker-arrow">></text>
         </view>
       </picker>
     </view>
@@ -52,5 +52,7 @@
     </view>
   </view>
 
-  <button class="submit-btn" bindtap="handleSubmit">确认上报</button>
+  <view class="submit-area">
+    <button class="btn-primary submit-btn" bindtap="handleSubmit">确认上报</button>
+  </view>
 </view>

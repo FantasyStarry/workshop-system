@@ -1,6 +1,8 @@
 <view class="container">
   <view class="result-card" wx:if="{{success}}">
-    <view class="result-icon success">✓</view>
+    <view class="result-icon success-icon">
+      <view class="check-mark"></view>
+    </view>
     <text class="result-title">上报成功</text>
     <view class="result-info">
       <view class="info-row">
@@ -17,17 +19,19 @@
       </view>
     </view>
     <view class="result-actions">
-      <button class="action-btn primary" bindtap="goHome">返回首页</button>
-      <button class="action-btn secondary" bindtap="goScan">继续扫码</button>
+      <button class="action-btn btn-primary" bindtap="goHome">返回首页</button>
+      <button class="action-btn btn-secondary" bindtap="goScan">继续扫码</button>
     </view>
   </view>
 
   <view class="result-card" wx:else>
-    <view class="result-icon error">✗</view>
+    <view class="result-icon error-icon">
+      <view class="cross-mark"></view>
+    </view>
     <text class="result-title">上报失败</text>
     <text class="result-message">请检查网络连接后重试</text>
     <view class="result-actions">
-      <button class="action-btn primary" bindtap="goBack">返回重试</button>
+      <button class="action-btn btn-primary" bindtap="goBack">返回重试</button>
     </view>
   </view>
 </view>

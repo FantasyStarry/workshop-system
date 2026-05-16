@@ -1,32 +1,41 @@
 <view class="container">
-  <view class="logo-section">
-    <view class="logo">
-      <text>🏭</text>
+  <view class="header-section">
+    <view class="logo-mark">
+      <text class="logo-letter">W</text>
     </view>
-    <text class="title">车间管理系统</text>
-    <text class="subtitle">扫码上报生产进度</text>
+    <text class="brand-title">车间管理系统</text>
+    <text class="brand-subtitle">扫码上报生产进度</text>
+    <view class="brand-divider"></view>
   </view>
 
   <view class="form-section" wx:if="{{!showBind}}">
-    <button class="wx-login-btn" bindtap="wxLogin">
-      <text class="btn-icon">📱</text>
-      <text>微信快捷登录</text>
-    </button>
+    <view class="login-card">
+      <view class="login-header">
+        <text class="login-title">欢迎使用</text>
+        <text class="login-desc">请使用微信账号登录</text>
+      </view>
+      <button class="wx-login-btn" bindtap="wxLogin">
+        <text>微信快捷登录</text>
+      </button>
+    </view>
   </view>
 
   <view class="form-section" wx:else>
-    <view class="bind-tip">
-      <text>📌 请绑定您的账号</text>
+    <view class="login-card">
+      <view class="login-header">
+        <text class="login-title">绑定账号</text>
+        <text class="login-desc">请绑定您的系统账号</text>
+      </view>
+      <view class="form-item">
+        <text class="form-label">用户名</text>
+        <input class="form-input" placeholder="请输入用户名" value="{{username}}" bindinput="onUsernameInput" />
+      </view>
+      <view class="form-item">
+        <text class="form-label">密码</text>
+        <input class="form-input" type="password" placeholder="请输入密码" value="{{password}}" bindinput="onPasswordInput" />
+      </view>
+      <button class="btn-primary" bindtap="bindAccount">确认绑定</button>
+      <button class="btn-secondary" style="margin-top: 20rpx;" bindtap="cancelBind">取消</button>
     </view>
-    <view class="form-item">
-      <text class="form-label">用户名</text>
-      <input class="form-input" placeholder="请输入用户名" value="{{username}}" bindinput="onUsernameInput" />
-    </view>
-    <view class="form-item">
-      <text class="form-label">密码</text>
-      <input class="form-input" type="password" placeholder="请输入密码" value="{{password}}" bindinput="onPasswordInput" />
-    </view>
-    <button class="bind-btn" bindtap="bindAccount">确认绑定</button>
-    <button class="cancel-btn" bindtap="cancelBind">取消绑定</button>
   </view>
 </view>

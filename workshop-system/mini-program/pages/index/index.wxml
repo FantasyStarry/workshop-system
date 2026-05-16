@@ -1,43 +1,50 @@
 <view class="container">
-  <view class="header">
-    <text class="title">车间管理系统</text>
-    <text class="subtitle">扫码上报生产进度</text>
+  <view class="header-section">
+    <view class="greeting">
+      <text class="greeting-title">车间管理</text>
+      <text class="greeting-sub">Workshop Management</text>
+    </view>
   </view>
 
-  <view class="quick-actions">
+  <view class="content-area">
     <view class="action-card" bindtap="goScan">
-      <view class="action-icon scan">
-        <text>📷</text>
+      <view class="action-icon-wrap">
+        <view class="action-icon-inner">
+          <view class="scan-line"></view>
+          <view class="scan-dot"></view>
+        </view>
       </view>
       <text class="action-title">扫码上报</text>
       <text class="action-desc">扫描二维码记录生产进度</text>
     </view>
-  </view>
 
-  <view class="stats-section">
-    <view class="section-title">今日统计</view>
-    <view class="stats-grid">
-      <view class="stat-item">
-        <text class="stat-value">{{todayRecords}}</text>
-        <text class="stat-label">今日上报</text>
-      </view>
-      <view class="stat-item">
-        <text class="stat-value">{{totalOrders}}</text>
-        <text class="stat-label">订单总数</text>
-      </view>
-      <view class="stat-item">
-        <text class="stat-value">{{completedStages}}</text>
-        <text class="stat-label">完成工序</text>
+    <view class="stats-card">
+      <view class="stats-title">今日统计</view>
+      <view class="stats-grid">
+        <view class="stat-item">
+          <text class="stat-value">{{todayRecords}}</text>
+          <text class="stat-label">今日上报</text>
+        </view>
+        <view class="stat-divider"></view>
+        <view class="stat-item">
+          <text class="stat-value">{{totalOrders}}</text>
+          <text class="stat-label">在产订单</text>
+        </view>
+        <view class="stat-divider"></view>
+        <view class="stat-item">
+          <text class="stat-value">{{completedStages}}</text>
+          <text class="stat-label">月完成数</text>
+        </view>
       </view>
     </view>
-  </view>
 
-  <view class="tips-section">
     <view class="tip-card">
-      <view class="tip-icon">💡</view>
+      <view class="tip-icon-wrap">
+        <view class="tip-dot"></view>
+      </view>
       <view class="tip-content">
         <text class="tip-title">使用提示</text>
-        <text class="tip-text">打开扫码页面，扫描产品二维码即可上报生产进度</text>
+        <text class="tip-text">点击上方扫码按钮，扫描产品二维码即可上报生产进度</text>
       </view>
     </view>
   </view>
