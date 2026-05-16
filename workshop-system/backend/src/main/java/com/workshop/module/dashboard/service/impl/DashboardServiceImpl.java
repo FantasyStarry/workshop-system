@@ -89,11 +89,11 @@ public class DashboardServiceImpl implements DashboardService {
         // 组装 7 天数据（补全天）
         Map<String, Long> scanMap = scanTrend.stream()
                 .collect(Collectors.toMap(
-                        m -> (String) m.get("record_date"),
+                        m -> m.get("record_date").toString(),
                         m -> ((Number) m.get("day_count")).longValue()));
         Map<String, Long> completeMap = completeTrend.stream()
                 .collect(Collectors.toMap(
-                        m -> (String) m.get("record_date"),
+                        m -> m.get("record_date").toString(),
                         m -> ((Number) m.get("day_count")).longValue()));
 
         List<Map<String, Object>> trend = new ArrayList<>();

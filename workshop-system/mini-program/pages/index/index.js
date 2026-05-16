@@ -1,3 +1,5 @@
+const { dashboardApi } = require('../../utils/api.js');
+
 Page({
   data: {
     todayRecords: 0,
@@ -7,26 +9,47 @@ Page({
 
   onLoad: function () {
     this.loadStats();
+    this._startAutoRefresh();
+  },
+
+  onShow: function () {
+    this.loadStats();
+  },
+
+  onUnload: function () {
+    this._stopAutoRefresh();
   },
 
   loadStats: function () {
-    wx.showLoading({
-      title: '加载中...'
-    });
-
-    setTimeout(function () {
-      wx.hideLoading();
-      this.setData({
-        todayRecords: 12,
-        totalOrders: 8,
-        completedStages: 35
+    dashboardApi.overview()
+      .then((data) => {
+        this.setData({
+          todayRecords: data.todayScanCount || 0,
+          totalOrders: data.activeOrderCount || 0,
+          completedStages: data.monthCompleteCount || 0
+        });
+      })
+      .catch((err) => {
+        console.error('加载仪表盘数据失败:', err);
       });
-    }.bind(this), 1000);
   },
 
   goScan: function () {
     wx.navigateTo({
       url: '/pages/scan/scan'
     });
+  },
+
+  _startAutoRefresh: function () {
+    this._autoRefreshTimer = setInterval(() => {
+      this.loadStats();
+    }, 30000);
+  },
+
+  _stopAutoRefresh: function () {
+    if (this._autoRefreshTimer) {
+      clearInterval(this._autoRefreshTimer);
+      this._autoRefreshTimer = null;
+    }
   }
 });

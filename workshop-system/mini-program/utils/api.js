@@ -91,8 +91,19 @@ const stageApi = {
   }
 };
 
+const dashboardApi = {
+  overview: () => {
+    return request({
+      url: '/dashboard/overview',
+      method: 'GET',
+      timeout: 10000
+    });
+  }
+};
+
 module.exports = {
   authApi,
+  dashboardApi,
   qrCodeApi,
   recordApi,
   stageApi,
