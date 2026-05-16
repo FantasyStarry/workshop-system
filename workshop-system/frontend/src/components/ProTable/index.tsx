@@ -22,6 +22,7 @@ interface ProTableProps<T> {
   extraButtons?: React.ReactNode;
   onRow?: (record: T) => any;
   expandable?: any;
+  refreshKey?: number;
 }
 
 function ProTable<T extends Record<string, any>>({
@@ -32,6 +33,7 @@ function ProTable<T extends Record<string, any>>({
   extraButtons,
   onRow,
   expandable,
+  refreshKey,
 }: ProTableProps<T>) {
   const [form] = Form.useForm();
   const [data, setData] = useState<T[]>([]);
@@ -67,7 +69,7 @@ function ProTable<T extends Record<string, any>>({
 
   useEffect(() => {
     loadData();
-  }, []);
+  }, [refreshKey]);
 
   const handleSearch = () => {
     loadData(1, pagination.pageSize);

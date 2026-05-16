@@ -5,7 +5,9 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.workshop.common.exception.BusinessException;
 import com.workshop.common.utils.CodeGenerator;
 import com.workshop.module.order.dto.OrderCreateDTO;
+import com.workshop.module.order.dto.OrderDetailDTO;
 import com.workshop.module.order.dto.OrderItemCreateDTO;
+import com.workshop.module.order.dto.OrderItemResponseDTO;
 import com.workshop.module.order.dto.OrderPageDTO;
 import com.workshop.module.order.entity.Order;
 import com.workshop.module.order.entity.OrderFile;
@@ -14,6 +16,8 @@ import com.workshop.module.order.mapper.OrderFileMapper;
 import com.workshop.module.order.mapper.OrderItemMapper;
 import com.workshop.module.order.mapper.OrderMapper;
 import com.workshop.module.order.service.OrderService;
+import com.workshop.module.product.entity.Product;
+import com.workshop.module.product.mapper.ProductMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -23,9 +27,8 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.HashMap;
+import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
 @Service
 public class OrderServiceImpl implements OrderService {
@@ -38,6 +41,9 @@ public class OrderServiceImpl implements OrderService {
 
     @Autowired
     private OrderFileMapper orderFileMapper;
+
+    @Autowired
+    private ProductMapper productMapper;
 
     @Autowired
     private CodeGenerator codeGenerator;
@@ -58,7 +64,7 @@ public class OrderServiceImpl implements OrderService {
     }
 
     @Override
-    public Map<String, Object> getDetail(Long id) {
+    public OrderDetailDTO getDetail(Long id) {
         Order order = orderMapper.selectById(id);
         if (order == null) {
             throw new BusinessException(404, "订单不存在");
@@ -72,16 +78,43 @@ public class OrderServiceImpl implements OrderService {
                 new LambdaQueryWrapper<OrderFile>().eq(OrderFile::getOrderId, id)
         );
 
-        Map<String, Object> detail = new HashMap<>();
-        detail.put("order", order);
-        detail.put("items", items);
-        detail.put("files", files);
+        List<OrderItemResponseDTO> itemDTOs = new ArrayList<>();
+        for (OrderItem item : items) {
+            OrderItemResponseDTO dto = new OrderItemResponseDTO();
+            dto.setId(item.getId());
+            dto.setOrderId(item.getOrderId());
+            dto.setProductId(item.getProductId());
+            dto.setQuantity(item.getQuantity());
+            dto.setUnitPrice(item.getUnitPrice());
+            dto.setSubtotal(item.getSubtotal());
+            dto.setProductionStatus(item.getProductionStatus());
+            dto.setSortOrder(item.getSortOrder());
+            dto.setRemark(item.getRemark());
+            dto.setCreatedAt(item.getCreatedAt());
+
+            if (item.getProductId() != null) {
+                Product product = productMapper.selectById(item.getProductId());
+                if (product != null) {
+                    dto.setProductName(product.getProductName());
+                    dto.setProductCode(product.getProductCode());
+                    dto.setSpecification(product.getSpecification());
+                    dto.setProductType(product.getProductType());
+                }
+            }
+
+            itemDTOs.add(dto);
+        }
+
+        OrderDetailDTO detail = new OrderDetailDTO();
+        detail.setOrder(order);
+        detail.setItems(itemDTOs);
+        detail.setFiles(files);
         return detail;
     }
 
     @Override
     @Transactional
-    public void create(OrderCreateDTO dto, Long userId) {
+    public Long create(OrderCreateDTO dto, Long userId) {
         // 校验必填字段
         if (!StringUtils.hasText(dto.getCustomerName())) {
             throw new BusinessException(400, "客户名称不能为空");
@@ -135,6 +168,8 @@ public class OrderServiceImpl implements OrderService {
                 orderItemMapper.insert(item);
             }
         }
+
+        return order.getId();
     }
 
     @Override

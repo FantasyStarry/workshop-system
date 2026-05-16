@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import { Tag, Button, Popconfirm, message, Space } from 'antd';
 import { PlusOutlined, EyeOutlined, EditOutlined, DeleteOutlined } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
@@ -7,6 +7,8 @@ import type { SearchColumn } from '../../components/ProTable';
 import { getOrderPage, deleteOrder, updateOrderStatus } from '../../api/order';
 import type { Order } from '../../types/order';
 import { useUserStore } from '../../store/userStore';
+import OrderFormModal from './OrderFormModal';
+import OrderDetailModal from './OrderDetailModal';
 import dayjs from 'dayjs';
 
 const statusMap: Record<number, { label: string; color: string }> = {
@@ -55,6 +57,31 @@ const OrderListPage: React.FC = () => {
   const canProduce = useMemo(() => hasAnyRole(roleCodes, ['PRODUCTION', 'ADMIN']), [roleCodes]);
   const canDelete = useMemo(() => hasAnyRole(roleCodes, ['ADMIN']), [roleCodes]);
 
+  // Modal state
+  const [listRefreshKey, setListRefreshKey] = useState(0);
+  const [createModalOpen, setCreateModalOpen] = useState(false);
+  const [editModalOpen, setEditModalOpen] = useState(false);
+  const [editOrderId, setEditOrderId] = useState<number>();
+  const [detailModalOpen, setDetailModalOpen] = useState(false);
+  const [detailOrderId, setDetailOrderId] = useState<number>(0);
+
+  const refreshList = () => setListRefreshKey((k) => k + 1);
+
+  const handleView = (record: Order) => {
+    setDetailOrderId(record.id);
+    setDetailModalOpen(true);
+  };
+
+  const handleEdit = (record: Order) => {
+    setEditOrderId(record.id);
+    setEditModalOpen(true);
+  };
+
+  const handleCreate = () => {
+    setEditOrderId(undefined);
+    setCreateModalOpen(true);
+  };
+
   const columns = [
     { title: '订单号', dataIndex: 'orderNo', key: 'orderNo', width: 160 },
     { title: '客户名称', dataIndex: 'customerName', key: 'customerName', width: 150 },
@@ -94,7 +121,7 @@ const OrderListPage: React.FC = () => {
               type="link"
               size="small"
               icon={<EyeOutlined />}
-              onClick={() => navigate(`/orders/${record.id}`)}
+              onClick={() => handleView(record)}
             >
               查看
             </Button>
@@ -103,7 +130,7 @@ const OrderListPage: React.FC = () => {
                 type="link"
                 size="small"
                 icon={<EditOutlined />}
-                onClick={() => navigate(`/orders/${record.id}/edit`)}
+                onClick={() => handleEdit(record)}
               >
                 编辑
               </Button>
@@ -114,7 +141,7 @@ const OrderListPage: React.FC = () => {
                 onConfirm={async () => {
                   await updateOrderStatus(record.id, nextStatus.value);
                   message.success('状态已更新');
-                  window.location.reload();
+                  refreshList();
                 }}
               >
                 <Button type="link" size="small" style={{ color: '#52c41a' }}>
@@ -128,7 +155,7 @@ const OrderListPage: React.FC = () => {
                 onConfirm={async () => {
                   await deleteOrder(record.id);
                   message.success('删除成功');
-                  window.location.reload();
+                  refreshList();
                 }}
               >
                 <Button type="link" size="small" danger icon={<DeleteOutlined />}>
@@ -143,19 +170,37 @@ const OrderListPage: React.FC = () => {
   ];
 
   return (
-    <ProTable<Order>
-      columns={columns}
-      fetchData={(page, pageSize, params) => getOrderPage({ page, pageSize, ...params }).then((r) => r.data)}
-      searchColumns={searchColumns}
-      rowKey="id"
-      extraButtons={
-        canManage ? (
-          <Button type="primary" icon={<PlusOutlined />} onClick={() => navigate('/orders/new')}>
-            新增订单
-          </Button>
-        ) : undefined
-      }
-    />
+    <>
+      <ProTable<Order>
+        columns={columns}
+        fetchData={(page, pageSize, params) => getOrderPage({ page, pageSize, ...params }).then((r) => r.data)}
+        searchColumns={searchColumns}
+        rowKey="id"
+        refreshKey={listRefreshKey}
+        extraButtons={
+          canManage ? (
+            <Button type="primary" icon={<PlusOutlined />} onClick={handleCreate}>
+              新增订单
+            </Button>
+          ) : undefined
+        }
+      />
+
+      {/* 新增 / 编辑弹窗 */}
+      <OrderFormModal
+        open={createModalOpen || editModalOpen}
+        orderId={editOrderId}
+        onClose={() => { setCreateModalOpen(false); setEditModalOpen(false); }}
+        onSuccess={refreshList}
+      />
+
+      {/* 查看弹窗 */}
+      <OrderDetailModal
+        open={detailModalOpen}
+        orderId={detailOrderId}
+        onClose={() => setDetailModalOpen(false)}
+      />
+    </>
   );
 };
 
