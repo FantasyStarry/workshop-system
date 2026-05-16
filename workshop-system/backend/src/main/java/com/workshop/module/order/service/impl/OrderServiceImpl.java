@@ -2,12 +2,10 @@ package com.workshop.module.order.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.workshop.common.constant.QrCodeStatus;
 import com.workshop.common.exception.BusinessException;
+import com.workshop.common.utils.CodeGenerator;
 import com.workshop.module.order.dto.OrderCreateDTO;
-import com.workshop.module.order.dto.OrderDetailDTO;
 import com.workshop.module.order.dto.OrderItemCreateDTO;
-import com.workshop.module.order.dto.OrderItemResponseDTO;
 import com.workshop.module.order.dto.OrderPageDTO;
 import com.workshop.module.order.entity.Order;
 import com.workshop.module.order.entity.OrderFile;
@@ -16,14 +14,10 @@ import com.workshop.module.order.mapper.OrderFileMapper;
 import com.workshop.module.order.mapper.OrderItemMapper;
 import com.workshop.module.order.mapper.OrderMapper;
 import com.workshop.module.order.service.OrderService;
-import com.workshop.module.production.entity.QrCode;
-import com.workshop.module.production.mapper.QrCodeMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
-
-import io.ebean.uuidv7.UUIDv7;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -32,7 +26,6 @@ import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 @Service
 public class OrderServiceImpl implements OrderService {
@@ -47,13 +40,7 @@ public class OrderServiceImpl implements OrderService {
     private OrderFileMapper orderFileMapper;
 
     @Autowired
-    private QrCodeMapper qrCodeMapper;
-
-    private String generateOrderNo() {
-        String today = LocalDate.now().toString().replace("-", "");
-        String uuid = UUIDv7.generate().toString().replace("-", "").substring(0, 8);
-        return "ORD" + today + uuid;
-    }
+    private CodeGenerator codeGenerator;
 
     @Override
     public Page<Order> pageQuery(Page<Order> page, OrderPageDTO dto) {
@@ -71,28 +58,30 @@ public class OrderServiceImpl implements OrderService {
     }
 
     @Override
-    public OrderDetailDTO getDetail(Long id) {
+    public Map<String, Object> getDetail(Long id) {
         Order order = orderMapper.selectById(id);
         if (order == null) {
             throw new BusinessException(404, "订单不存在");
         }
 
-        List<OrderItemResponseDTO> items = orderItemMapper.selectWithProductByOrderId(id);
+        List<OrderItem> items = orderItemMapper.selectList(
+                new LambdaQueryWrapper<OrderItem>().eq(OrderItem::getOrderId, id)
+        );
 
         List<OrderFile> files = orderFileMapper.selectList(
                 new LambdaQueryWrapper<OrderFile>().eq(OrderFile::getOrderId, id)
         );
 
-        OrderDetailDTO detail = new OrderDetailDTO();
-        detail.setOrder(order);
-        detail.setItems(items);
-        detail.setFiles(files);
+        Map<String, Object> detail = new HashMap<>();
+        detail.put("order", order);
+        detail.put("items", items);
+        detail.put("files", files);
         return detail;
     }
 
     @Override
     @Transactional
-    public Long create(OrderCreateDTO dto, Long userId) {
+    public void create(OrderCreateDTO dto, Long userId) {
         // 校验必填字段
         if (!StringUtils.hasText(dto.getCustomerName())) {
             throw new BusinessException(400, "客户名称不能为空");
@@ -119,7 +108,7 @@ public class OrderServiceImpl implements OrderService {
         }
 
         Order order = new Order();
-        order.setOrderNo(generateOrderNo());
+        order.setOrderNo(codeGenerator.generateOrderNo());
         order.setCustomerName(dto.getCustomerName());
         order.setCustomerContact(dto.getCustomerContact());
         order.setCustomerPhone(dto.getCustomerPhone());
@@ -146,8 +135,6 @@ public class OrderServiceImpl implements OrderService {
                 orderItemMapper.insert(item);
             }
         }
-
-        return order.getId();
     }
 
     @Override
@@ -177,18 +164,6 @@ public class OrderServiceImpl implements OrderService {
         if (order == null) {
             throw new BusinessException(404, "订单不存在");
         }
-
-        // 将该订单下所有二维码置为报废状态，防止继续扫码使用
-        List<OrderItem> items = orderItemMapper.selectList(
-                new LambdaQueryWrapper<OrderItem>().eq(OrderItem::getOrderId, id));
-        if (!items.isEmpty()) {
-            List<Long> itemIds = items.stream().map(OrderItem::getId).collect(Collectors.toList());
-            QrCode qrUpdate = new QrCode();
-            qrUpdate.setStatus(QrCodeStatus.SCRAPPED.getCode());
-            qrCodeMapper.update(qrUpdate,
-                    new LambdaQueryWrapper<QrCode>().in(QrCode::getOrderItemId, itemIds));
-        }
-
         // Delete related items and files
         orderItemMapper.delete(new LambdaQueryWrapper<OrderItem>().eq(OrderItem::getOrderId, id));
         orderFileMapper.delete(new LambdaQueryWrapper<OrderFile>().eq(OrderFile::getOrderId, id));
