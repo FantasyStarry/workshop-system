@@ -272,14 +272,14 @@ const OrderFormPage: React.FC = () => {
               },
             ]}
           />
-          <div style={{ textAlign: 'right', marginTop: 16, fontSize: 16, fontWeight: 'bold' }}>
+          <div style={{ textAlign: 'right', marginTop: 16, fontSize: 16, fontWeight: 600, color: '#4F46E5' }}>
             总计：¥{selectedProducts.reduce((s, p) => s + p.subtotal, 0).toFixed(2)}
           </div>
         </div>
         <div style={current === 2 ? undefined : hiddenStyle}>
-          <Card title="订单确认">
-            <div style={{ marginBottom: 16 }}>
-              <strong>客户信息：</strong>
+          <Card title="订单确认" style={{ borderColor: '#E2E8F0' }}>
+            <div style={{ marginBottom: 16, color: '#0F172A' }}>
+              <strong style={{ color: '#475569' }}>客户信息：</strong>
               {form.getFieldValue('customerName') || '（未填写）'}
             </div>
             <Table
@@ -294,7 +294,7 @@ const OrderFormPage: React.FC = () => {
                 { title: '小计', dataIndex: 'subtotal', render: (v: number) => `¥${v.toFixed(2)}` },
               ]}
             />
-            <div style={{ textAlign: 'right', marginTop: 16, fontSize: 18, fontWeight: 'bold', color: '#ff4d4f' }}>
+            <div style={{ textAlign: 'right', marginTop: 16, fontSize: 18, fontWeight: 600, color: '#4F46E5' }}>
               订单总额：¥{selectedProducts.reduce((s, p) => s + p.subtotal, 0).toFixed(2)}
             </div>
           </Card>
@@ -304,18 +304,23 @@ const OrderFormPage: React.FC = () => {
   };
 
   return (
-    <Card>
-      <Steps current={current} items={steps} style={{ marginBottom: 32 }} />
+    <Card style={{ borderColor: '#E2E8F0' }}>
+      <Steps
+        current={current}
+        items={steps}
+        style={{ marginBottom: 32 }}
+        className="order-form-steps"
+      />
       <Form form={form} layout="vertical">
         {renderStepContent()}
       </Form>
       <div style={{ marginTop: 24, textAlign: 'center' }}>
         <Space>
           {current > 0 && (
-            <Button onClick={() => setCurrent(current - 1)}>上一步</Button>
+            <Button onClick={() => setCurrent(current - 1)} style={{ borderColor: '#E2E8F0', color: '#475569' }}>上一步</Button>
           )}
           {current < 2 && (
-            <Button type="primary" onClick={async () => {
+            <Button type="primary" style={{ background: '#4F46E5', borderColor: '#4F46E5' }} onClick={async () => {
               // 第0步为基本信息，需要先校验表单
               if (current === 0) {
                 try {
@@ -330,11 +335,11 @@ const OrderFormPage: React.FC = () => {
             </Button>
           )}
           {current === 2 && (
-            <Button type="primary" loading={loading} onClick={handleSubmit}>
+            <Button type="primary" style={{ background: '#4F46E5', borderColor: '#4F46E5' }} loading={loading} onClick={handleSubmit}>
               提交订单
             </Button>
           )}
-          <Button onClick={() => navigate('/orders')}>取消</Button>
+          <Button onClick={() => navigate('/orders')} style={{ borderColor: '#E2E8F0', color: '#475569' }}>取消</Button>
         </Space>
       </div>
     </Card>

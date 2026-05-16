@@ -11,8 +11,8 @@ import dayjs from 'dayjs';
 const statusMap: Record<number, { label: string; color: string }> = {
   0: { label: '待生产', color: 'default' },
   1: { label: '生产中', color: 'processing' },
-  2: { label: '已完成', color: 'success' },
-  3: { label: '已作废', color: 'error' },
+  2: { label: '已完成', color: '#059669' },
+  3: { label: '已作废', color: '#DC2626' },
 };
 
 interface QrCodeDetail {
@@ -126,7 +126,7 @@ const QrCodePage: React.FC = () => {
       render: (v: string, record: QrCodeDetail) => (
         <div>
           <div>{v}</div>
-          <div style={{ fontSize: 12, color: '#999' }}>{record.productCode}</div>
+          <div style={{ fontSize: 12, color: '#94A3B8' }}>{record.productCode}</div>
         </div>
       ),
     },
@@ -138,7 +138,7 @@ const QrCodePage: React.FC = () => {
       render: (v: string, record: QrCodeDetail) => (
         <div>
           <div>{v || '-'}</div>
-          <div style={{ fontSize: 12, color: '#999' }}>
+          <div style={{ fontSize: 12, color: '#94A3B8' }}>
             {record.currentStageSeq}/{record.totalStages}
           </div>
         </div>
@@ -151,17 +151,17 @@ const QrCodePage: React.FC = () => {
       render: (_: any, record: QrCodeDetail) => (
         <div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-            <div style={{ flex: 1, height: 8, backgroundColor: '#f0f0f0', borderRadius: 4, overflow: 'hidden' }}>
+            <div style={{ flex: 1, height: 8, backgroundColor: '#F1F5F9', borderRadius: 4, overflow: 'hidden' }}>
               <div 
                 style={{ 
                   height: '100%', 
-                  backgroundColor: record.status === 2 ? '#52c41a' : '#1890ff',
+                  backgroundColor: record.status === 2 ? '#059669' : '#4F46E5',
                   width: `${record.progressPercent || 0}%`,
                   transition: 'width 0.3s'
                 }} 
               />
             </div>
-            <span style={{ fontSize: 12, color: '#666' }}>{record.progressPercent || 0}%</span>
+            <span style={{ fontSize: 12, color: '#475569' }}>{record.progressPercent || 0}%</span>
           </div>
         </div>
       ),
@@ -184,7 +184,7 @@ const QrCodePage: React.FC = () => {
         <div>
           <div>{record.lastOperatorName || record.lastOperator || '-'}</div>
           {record.lastScanTime && (
-            <div style={{ fontSize: 12, color: '#999' }}>
+            <div style={{ fontSize: 12, color: '#94A3B8' }}>
               {dayjs(record.lastScanTime).format('MM-DD HH:mm')}
             </div>
           )}

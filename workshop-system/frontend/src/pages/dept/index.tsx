@@ -125,7 +125,7 @@ const DeptPage: React.FC = () => {
       key: 'deptName',
       render: (_: any, record: FlatDept) => (
         <span style={{ paddingLeft: record.level * 24, display: 'inline-block' }}>
-          {record.level > 0 && <span style={{ color: '#bbb', marginRight: 4 }}>└ </span>}
+          {record.level > 0 && <span style={{ color: '#94A3B8', marginRight: 4 }}>└ </span>}
           {record.deptName}
         </span>
       ),
@@ -151,7 +151,7 @@ const DeptPage: React.FC = () => {
       width: 80,
       align: 'center' as const,
       render: (v: number) =>
-        v === 1 ? <Tag color="green">启用</Tag> : <Tag color="default">禁用</Tag>,
+        v === 1 ? <Tag color="#059669">启用</Tag> : <Tag color="default">禁用</Tag>,
     },
     {
       title: '操作',

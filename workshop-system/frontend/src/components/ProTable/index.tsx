@@ -87,63 +87,93 @@ function ProTable<T extends Record<string, any>>({
   const renderSearchForm = () => {
     if (searchColumns.length === 0) return null;
     return (
-      <Form form={form} layout="inline" style={{ marginBottom: 16 }}>
-        <Row gutter={[16, 16]} style={{ width: '100%' }}>
-          {searchColumns.map((col) => (
-            <Col key={col.name}>
-              <Form.Item name={col.name} label={col.label}>
-                {col.type === 'input' && (
-                  <Input placeholder={col.placeholder || `请输入${col.label}`} allowClear style={{ width: 180 }} />
-                )}
-                {col.type === 'select' && (
-                  <Select
-                    placeholder={col.placeholder || `请选择${col.label}`}
-                    allowClear
-                    style={{ width: 180 }}
-                    options={col.options}
-                  />
-                )}
-                {col.type === 'dateRange' && <RangePicker style={{ width: 260 }} />}
-              </Form.Item>
+      <div style={styles.searchArea}>
+        <Form form={form} layout="inline">
+          <Row gutter={[16, 12]} style={{ width: '100%' }}>
+            {searchColumns.map((col) => (
+              <Col key={col.name}>
+                <Form.Item name={col.name} label={col.label} style={{ marginBottom: 0 }}>
+                  {col.type === 'input' && (
+                    <Input
+                      placeholder={col.placeholder || `请输入${col.label}`}
+                      allowClear
+                      style={{ width: 180 }}
+                    />
+                  )}
+                  {col.type === 'select' && (
+                    <Select
+                      placeholder={col.placeholder || `请选择${col.label}`}
+                      allowClear
+                      style={{ width: 180 }}
+                      options={col.options}
+                    />
+                  )}
+                  {col.type === 'dateRange' && <RangePicker style={{ width: 260 }} />}
+                </Form.Item>
+              </Col>
+            ))}
+            <Col>
+              <Space size={8}>
+                <Button
+                  type="primary"
+                  icon={<SearchOutlined />}
+                  onClick={handleSearch}
+                  style={{ borderRadius: 6 }}
+                >
+                  搜索
+                </Button>
+                <Button
+                  icon={<ReloadOutlined />}
+                  onClick={handleReset}
+                  style={{ borderRadius: 6 }}
+                >
+                  重置
+                </Button>
+              </Space>
             </Col>
-          ))}
-          <Col>
-            <Space>
-              <Button type="primary" icon={<SearchOutlined />} onClick={handleSearch}>
-                搜索
-              </Button>
-              <Button icon={<ReloadOutlined />} onClick={handleReset}>
-                重置
-              </Button>
-            </Space>
-          </Col>
-        </Row>
-      </Form>
+          </Row>
+        </Form>
+      </div>
     );
   };
 
   return (
-    <Card>
+    <Card styles={{ body: { padding: 0 } }}>
       {renderSearchForm()}
-      {extraButtons && <div style={{ marginBottom: 16 }}>{extraButtons}</div>}
-      <Table<T>
-        rowKey={rowKey}
-        columns={columns}
-        dataSource={data}
-        loading={loading}
-        onRow={onRow}
-        expandable={expandable}
-        pagination={{
-          current: pagination.page,
-          pageSize: pagination.pageSize,
-          total: pagination.total,
-          showSizeChanger: true,
-          showTotal: (total) => `共 ${total} 条`,
-        }}
-        onChange={handleTableChange}
-      />
+      {extraButtons && <div style={styles.extraBtnArea}>{extraButtons}</div>}
+      <div style={styles.tableArea}>
+        <Table<T>
+          rowKey={rowKey}
+          columns={columns}
+          dataSource={data}
+          loading={loading}
+          onRow={onRow}
+          expandable={expandable}
+          pagination={{
+            current: pagination.page,
+            pageSize: pagination.pageSize,
+            total: pagination.total,
+            showSizeChanger: true,
+            showTotal: (total) => `共 ${total} 条`,
+          }}
+          onChange={handleTableChange}
+        />
+      </div>
     </Card>
   );
 }
+
+const styles: Record<string, React.CSSProperties> = {
+  searchArea: {
+    padding: '20px 20px 0',
+    borderBottom: '1px solid #F1F5F9',
+  },
+  extraBtnArea: {
+    padding: '16px 20px 0',
+  },
+  tableArea: {
+    padding: '0 20px 20px',
+  },
+};
 
 export default ProTable;

@@ -9,7 +9,7 @@ import type { Product } from '../../types/product';
 
 const statusMap: Record<number, { label: string; color: string }> = {
   0: { label: '禁用', color: 'default' },
-  1: { label: '启用', color: 'success' },
+  1: { label: '启用', color: '#059669' },
 };
 
 const searchColumns: SearchColumn[] = [
@@ -56,6 +56,7 @@ const ProductListPage: React.FC = () => {
             type="link"
             size="small"
             icon={<EyeOutlined />}
+            style={{ color: '#4F46E5' }}
             onClick={() => navigate(`/products/${record.id}`)}
           >
             查看
@@ -64,6 +65,7 @@ const ProductListPage: React.FC = () => {
             type="link"
             size="small"
             icon={<EditOutlined />}
+            style={{ color: '#4F46E5' }}
             onClick={() => navigate(`/products/${record.id}/edit`)}
           >
             编辑
@@ -77,7 +79,7 @@ const ProductListPage: React.FC = () => {
                 window.location.reload();
               }}
             >
-              <Button type="link" size="small" icon={<StopOutlined />}>
+              <Button type="link" size="small" icon={<StopOutlined />} style={{ color: '#94A3B8' }}>
                 停用
               </Button>
             </Popconfirm>
@@ -90,7 +92,7 @@ const ProductListPage: React.FC = () => {
                 window.location.reload();
               }}
             >
-              <Button type="link" size="small" icon={<CheckCircleOutlined />} style={{ color: '#52c41a' }}>
+              <Button type="link" size="small" icon={<CheckCircleOutlined />} style={{ color: '#059669' }}>
                 启用
               </Button>
             </Popconfirm>
@@ -103,7 +105,7 @@ const ProductListPage: React.FC = () => {
               window.location.reload();
             }}
           >
-            <Button type="link" size="small" danger>
+            <Button type="link" size="small" danger style={{ color: '#DC2626' }}>
               删除
             </Button>
           </Popconfirm>

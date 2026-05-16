@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Card, Descriptions, Tabs, Table, Tag, message, Spin, Steps, Timeline } from 'antd';
+import { Card, Descriptions, Tabs, Table, Tag, message, Spin, Steps, Timeline, Modal } from 'antd';
 import { useParams } from 'react-router-dom';
 import dayjs from 'dayjs';
 import { getOrderDetail, deleteOrderFile } from '../../api/order';
@@ -12,16 +12,16 @@ import type { ProductionRecord, ProductionStage } from '../../types/production';
 
 const statusMap: Record<number, { label: string; color: string }> = {
   0: { label: '待确认', color: 'default' },
-  1: { label: '生产中', color: 'processing' },
-  2: { label: '已完成', color: 'success' },
-  3: { label: '已取消', color: 'error' },
+  1: { label: '生产中', color: '#4F46E5' },
+  2: { label: '已完成', color: '#059669' },
+  3: { label: '已取消', color: '#DC2626' },
 };
 
 const prodStatusMap: Record<number, { label: string; color: string }> = {
   0: { label: '未开始', color: 'default' },
-  1: { label: '生产中', color: 'processing' },
-  2: { label: '已完成', color: 'success' },
-  3: { label: '已暂停', color: 'warning' },
+  1: { label: '生产中', color: '#4F46E5' },
+  2: { label: '已完成', color: '#059669' },
+  3: { label: '已暂停', color: '#D97706' },
 };
 
 const OrderDetailPage: React.FC = () => {
@@ -115,20 +115,20 @@ const OrderDetailPage: React.FC = () => {
     );
     
     return (
-      <div key={item.id} style={{ marginBottom: 24, padding: 16, border: '1px solid #f0f0f0', borderRadius: 8 }}>
-        <h4 style={{ marginBottom: 12 }}>
+      <div key={item.id} style={{ marginBottom: 24, padding: 20, border: '1px solid #E2E8F0', borderRadius: 8, background: '#FAFBFC' }}>
+        <h4 style={{ marginBottom: 12, color: '#0F172A', fontSize: 15 }}>
           {item.productName}（{item.productCode}）
-          <Tag style={{ marginLeft: 8 }} color={item.productionStatus === 2 ? 'success' : item.productionStatus === 1 ? 'processing' : 'default'}>
+          <Tag style={{ marginLeft: 8 }} color={item.productionStatus === 2 ? '#059669' : item.productionStatus === 1 ? '#4F46E5' : 'default'}>
             {prodStatusMap[item.productionStatus]?.label || '未知'}
           </Tag>
         </h4>
         <Steps size="small" items={getStepItems(completedStageIds, lastRecord?.stageId) as any} />
         <Timeline style={{ marginTop: 16 }}>
           {sortedRecords.map((rec) => (
-            <Timeline.Item key={rec.id} color="green">
-              <strong>{rec.stageName}</strong>
-              <Tag color="blue" style={{ marginLeft: 8 }}>{rec.operatorName || '系统'}</Tag>
-              <div style={{ color: '#999', fontSize: 12, marginTop: 4 }}>
+            <Timeline.Item key={rec.id} color="#059669">
+              <strong style={{ color: '#0F172A' }}>{rec.stageName}</strong>
+              <Tag color="#4F46E5" style={{ marginLeft: 8 }}>{rec.operatorName || '系统'}</Tag>
+              <div style={{ color: '#94A3B8', fontSize: 12, marginTop: 4 }}>
                 {dayjs(rec.scanTime).format('YYYY-MM-DD HH:mm:ss')}
               </div>
             </Timeline.Item>
@@ -177,8 +177,16 @@ const OrderDetailPage: React.FC = () => {
       key: 'action',
       render: (_: any, record: OrderFile) => (
         <a
+          style={{ color: '#DC2626' }}
           onClick={() => {
-            if (window.confirm('确定删除该文件吗？')) handleDeleteFile(record.id);
+            Modal.confirm({
+              title: '确认删除',
+              content: '确定删除该文件吗？',
+              okText: '确定',
+              cancelText: '取消',
+              okButtonProps: { danger: true },
+              onOk: () => handleDeleteFile(record.id),
+            });
           }}
         >
           删除
@@ -225,7 +233,7 @@ const OrderDetailPage: React.FC = () => {
             )
           ) : groupedProgress.unmatchedRecords.length > 0 ? (
             <div>
-              <p style={{ color: '#999', marginBottom: 12 }}>以下记录未能关联到订单产品明细：</p>
+              <p style={{ color: '#94A3B8', marginBottom: 12 }}>以下记录未能关联到订单产品明细：</p>
               <Table dataSource={groupedProgress.unmatchedRecords} rowKey="id" pagination={false}
                 columns={[
                   { title: '产品', dataIndex: 'productName', key: 'productName' },
@@ -236,7 +244,7 @@ const OrderDetailPage: React.FC = () => {
             </div>
           ) : null}
           {records.length === 0 && (
-            <div style={{ color: '#999', textAlign: 'center', padding: 40 }}>暂无生产记录</div>
+            <div style={{ color: '#94A3B8', textAlign: 'center', padding: 40 }}>暂无生产记录</div>
           )}
         </div>
       ),
@@ -244,8 +252,14 @@ const OrderDetailPage: React.FC = () => {
   ];
 
   return (
-    <Card>
-      <Descriptions title="订单基本信息" column={2} bordered>
+    <Card style={{ borderColor: '#E2E8F0' }}>
+      <Descriptions
+        title={<span style={{ color: '#0F172A', fontWeight: 600 }}>订单基本信息</span>}
+        column={2}
+        bordered
+        labelStyle={{ backgroundColor: '#F8FAFC', color: '#475569', borderColor: '#F1F5F9' }}
+        contentStyle={{ color: '#0F172A', borderColor: '#F1F5F9' }}
+      >
         <Descriptions.Item label="订单号">{order.orderNo}</Descriptions.Item>
         <Descriptions.Item label="状态">
           <Tag color={s.color}>{s.label}</Tag>
@@ -256,7 +270,7 @@ const OrderDetailPage: React.FC = () => {
         <Descriptions.Item label="客户地址">{order.customerAddress || '-'}</Descriptions.Item>
         <Descriptions.Item label="下单日期">{order.orderDate ? dayjs(order.orderDate).format('YYYY-MM-DD') : '-'}</Descriptions.Item>
         <Descriptions.Item label="交付日期">{order.deliveryDate ? dayjs(order.deliveryDate).format('YYYY-MM-DD') : '-'}</Descriptions.Item>
-        <Descriptions.Item label="订单金额">¥{order.totalAmount?.toFixed(2) || '0.00'}</Descriptions.Item>
+        <Descriptions.Item label="订单金额"><span style={{ color: '#4F46E5', fontWeight: 600 }}>¥{order.totalAmount?.toFixed(2) || '0.00'}</span></Descriptions.Item>
         <Descriptions.Item label="备注">{order.remark || '-'}</Descriptions.Item>
       </Descriptions>
       <Tabs items={tabItems} defaultActiveKey="items" style={{ marginTop: 24 }} />

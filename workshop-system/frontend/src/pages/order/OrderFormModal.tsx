@@ -241,6 +241,7 @@ const OrderFormModal: React.FC<OrderFormModalProps> = ({ open, orderId, onClose,
       footer={null}
       destroyOnClose
       maskClosable={false}
+      styles={{ header: { borderBottom: '1px solid #F1F5F9', paddingBottom: 16 } }}
     >
       <Steps current={current} items={steps} style={{ marginBottom: 24 }} />
 
@@ -291,9 +292,9 @@ const OrderFormModal: React.FC<OrderFormModalProps> = ({ open, orderId, onClose,
             size="middle"
           />
           {selectedProducts.length === 0 && (
-            <div style={{ textAlign: 'center', padding: 20, color: '#999' }}>请从上方选择产品添加到订单</div>
+            <div style={{ textAlign: 'center', padding: 20, color: '#94A3B8' }}>请从上方选择产品添加到订单</div>
           )}
-          <div style={{ textAlign: 'right', marginTop: 12, fontSize: 15, fontWeight: 600 }}>
+          <div style={{ textAlign: 'right', marginTop: 12, fontSize: 15, fontWeight: 600, color: '#4F46E5' }}>
             合计：¥{selectedProducts.reduce((sum, p) => sum + p.subtotal, 0).toFixed(2)}
           </div>
         </div>
@@ -320,22 +321,22 @@ const OrderFormModal: React.FC<OrderFormModalProps> = ({ open, orderId, onClose,
             pagination={false}
             size="middle"
           />
-          <div style={{ textAlign: 'right', marginTop: 12, fontSize: 16, fontWeight: 600, color: '#1677ff' }}>
+          <div style={{ textAlign: 'right', marginTop: 12, fontSize: 16, fontWeight: 600, color: '#4F46E5' }}>
             总计：¥{selectedProducts.reduce((sum, p) => sum + p.subtotal, 0).toFixed(2)}
           </div>
         </div>
       </Form>
 
-      <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 24 }}>
-        <Button disabled={current === 0} onClick={() => setCurrent((c) => c - 1)}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 24, borderTop: '1px solid #F1F5F9', paddingTop: 16 }}>
+        <Button disabled={current === 0} onClick={() => setCurrent((c) => c - 1)} style={{ borderColor: '#E2E8F0', color: '#475569' }}>
           上一步
         </Button>
         {current < steps.length - 1 ? (
-          <Button type="primary" onClick={() => setCurrent((c) => c + 1)}>
+          <Button type="primary" style={{ background: '#4F46E5', borderColor: '#4F46E5' }} onClick={() => setCurrent((c) => c + 1)}>
             下一步
           </Button>
         ) : (
-          <Button type="primary" onClick={handleSubmit} loading={loading}>
+          <Button type="primary" style={{ background: '#4F46E5', borderColor: '#4F46E5' }} onClick={handleSubmit} loading={loading}>
             {isEdit ? '保存修改' : '提交订单'}
           </Button>
         )}

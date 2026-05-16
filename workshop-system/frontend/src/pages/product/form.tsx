@@ -52,7 +52,7 @@ const ProductFormPage: React.FC = () => {
   };
 
   return (
-    <Card title={isEdit ? '编辑产品' : '新增产品'}>
+    <Card title={<span style={{ color: '#0F172A', fontWeight: 600 }}>{isEdit ? '编辑产品' : '新增产品'}</span>} style={{ borderRadius: 8, border: '1px solid #E2E8F0', boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}>
       <Form form={form} layout="vertical" onFinish={handleSubmit} style={{ maxWidth: 800 }}>
         <Form.Item name="productCode" label="产品编号" rules={[{ required: true, message: '请输入产品编号' }]}>
           <Input placeholder="请输入产品编号" />
@@ -94,10 +94,10 @@ const ProductFormPage: React.FC = () => {
           <TextArea rows={4} placeholder="请输入技术参数" />
         </Form.Item>
         <Form.Item>
-          <Button type="primary" htmlType="submit" loading={loading} style={{ marginRight: 8 }}>
+          <Button type="primary" htmlType="submit" loading={loading} style={{ marginRight: 8, background: '#4F46E5', borderColor: '#4F46E5' }}>
             {isEdit ? '更新' : '创建'}
           </Button>
-          <Button onClick={() => navigate('/products')}>取消</Button>
+          <Button onClick={() => navigate('/products')} style={{ color: '#475569', borderColor: '#E2E8F0' }}>取消</Button>
         </Form.Item>
       </Form>
     </Card>

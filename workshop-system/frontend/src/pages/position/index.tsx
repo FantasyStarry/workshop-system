@@ -114,7 +114,7 @@ const PositionPage: React.FC = () => {
       dataIndex: 'status',
       key: 'status',
       width: 80,
-      render: (val: number) => <Tag color={val === 1 ? 'green' : 'default'}>{val === 1 ? '启用' : '禁用'}</Tag>,
+      render: (val: number) => <Tag color={val === 1 ? '#059669' : 'default'}>{val === 1 ? '启用' : '禁用'}</Tag>,
     },
     {
       title: '操作',

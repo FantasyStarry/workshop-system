@@ -12,8 +12,8 @@ import dayjs from 'dayjs';
 const qrStatusMap: Record<number, { label: string; color: string }> = {
   0: { label: '待生产', color: 'default' },
   1: { label: '生产中', color: 'processing' },
-  2: { label: '已完成', color: 'success' },
-  3: { label: '已报废', color: 'error' },
+  2: { label: '已完成', color: '#059669' },
+  3: { label: '已报废', color: '#DC2626' },
 };
 
 const ProgressPage: React.FC = () => {
@@ -170,7 +170,7 @@ const ProgressPage: React.FC = () => {
           <Spin size="large" />
         </div>
       ) : progressData.length === 0 ? (
-        <div style={{ textAlign: 'center', padding: 40, color: '#999' }}>
+        <div style={{ textAlign: 'center', padding: 40, color: '#94A3B8' }}>
           {selectedOrderId ? '暂无生产进度数据' : '请选择一个订单查看进度'}
         </div>
       ) : (
@@ -211,19 +211,19 @@ const ProgressPage: React.FC = () => {
                         style={{
                           marginBottom: 16,
                           padding: 16,
-                          border: '1px solid #f0f0f0',
+                          border: '1px solid #F1F5F9',
                           borderRadius: 8,
-                          backgroundColor: '#fafafa',
+                          backgroundColor: '#FAFBFC',
                         }}
                       >
                         {/* QR code header */}
                         <div style={{ marginBottom: 12, display: 'flex', alignItems: 'center', gap: 8 }}>
-                          <Tag color="cyan" style={{ fontSize: 13, padding: '2px 10px' }}>
+                          <Tag color="#4F46E5" style={{ fontSize: 13, padding: '2px 10px' }}>
                             序列号 #{qr.serialNo}
                           </Tag>
                           <Tag color={qrStatus.color}>{qrStatus.label}</Tag>
                           {qr.lastRecord && (
-                            <span style={{ fontSize: 12, color: '#999' }}>
+                            <span style={{ fontSize: 12, color: '#94A3B8' }}>
                               最近：{dayjs(qr.lastRecord.scanTime).format('MM-DD HH:mm')}
                             </span>
                           )}
@@ -254,13 +254,13 @@ const ProgressPage: React.FC = () => {
                                           new Date(a.scanTime).getTime() - new Date(b.scanTime).getTime()
                                       )
                                       .map((rec: ProductionRecord) => (
-                                        <Timeline.Item key={rec.id} color="green">
+                                        <Timeline.Item key={rec.id} color="#059669">
                                           <div>
                                             <strong>{rec.stageName}</strong>
-                                            <Tag color="blue" style={{ marginLeft: 8 }}>
+                                            <Tag color="#0284C7" style={{ marginLeft: 8 }}>
                                               {rec.operatorName || '系统'}
                                             </Tag>
-                                            <div style={{ color: '#999', fontSize: 12, marginTop: 4 }}>
+                                            <div style={{ color: '#94A3B8', fontSize: 12, marginTop: 4 }}>
                                               <ClockCircleOutlined style={{ marginRight: 4 }} />
                                               {dayjs(rec.scanTime).format('YYYY-MM-DD HH:mm:ss')}
                                             </div>
@@ -269,7 +269,7 @@ const ProgressPage: React.FC = () => {
                                               {rec.qcResult === 0 ? (
                                                 <Tag color="default">未质检</Tag>
                                               ) : (
-                                                <Tag color={rec.qcResult === 1 ? 'green' : 'red'}>
+                                                <Tag color={rec.qcResult === 1 ? '#059669' : '#DC2626'}>
                                                   {rec.qcResult === 1 ? '合格' : '不合格'}
                                                 </Tag>
                                               )}
@@ -283,13 +283,13 @@ const ProgressPage: React.FC = () => {
                             ]}
                           />
                         ) : (
-                          <div style={{ color: '#999', fontSize: 12, marginTop: 12 }}>暂无操作记录</div>
+                          <div style={{ color: '#94A3B8', fontSize: 12, marginTop: 12 }}>暂无操作记录</div>
                         )}
                       </div>
                     );
                   })
                 ) : (
-                  <span style={{ color: '#999' }}>暂未生成二维码</span>
+                  <span style={{ color: '#94A3B8' }}>暂未生成二维码</span>
                 )}
               </div>
             ),

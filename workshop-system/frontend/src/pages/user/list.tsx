@@ -10,7 +10,7 @@ import type { PageResult } from '../../types/api';
 
 const statusMap: Record<number, { label: string; color: string }> = {
   0: { label: '禁用', color: 'default' },
-  1: { label: '启用', color: 'success' },
+  1: { label: '启用', color: '#059669' },
 };
 
 const searchColumns: SearchColumn[] = [
@@ -146,7 +146,7 @@ const UserListPage: React.FC = () => {
               title="确定停用该用户吗？"
               onConfirm={() => handleToggleStatus(record.id, 1)}
             >
-              <Button type="link" size="small" icon={<StopOutlined />}>
+              <Button type="link" size="small" icon={<StopOutlined />} style={{ color: '#D97706' }}>
                 停用
               </Button>
             </Popconfirm>
@@ -155,7 +155,7 @@ const UserListPage: React.FC = () => {
               title="确定启用该用户吗？"
               onConfirm={() => handleToggleStatus(record.id, 0)}
             >
-              <Button type="link" size="small" icon={<CheckCircleOutlined />} style={{ color: '#52c41a' }}>
+              <Button type="link" size="small" icon={<CheckCircleOutlined />} style={{ color: '#059669' }}>
                 启用
               </Button>
             </Popconfirm>

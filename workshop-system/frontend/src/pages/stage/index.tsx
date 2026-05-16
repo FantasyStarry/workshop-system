@@ -125,9 +125,10 @@ const StagePage: React.FC = () => {
 
   return (
     <Card
-      title="生产环节管理"
+      title={<span style={{ color: '#0F172A', fontWeight: 600 }}>生产环节管理</span>}
+      style={{ borderRadius: 8, border: '1px solid #E2E8F0', boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}
       extra={
-        <Button type="primary" icon={<PlusOutlined />} onClick={handleAdd}>
+        <Button type="primary" icon={<PlusOutlined />} onClick={handleAdd} style={{ background: '#4F46E5', borderColor: '#4F46E5' }}>
           新增环节
         </Button>
       }
@@ -138,7 +139,7 @@ const StagePage: React.FC = () => {
             <Card
               size="small"
               hoverable
-              style={{ opacity: stage.status === 0 ? 0.6 : 1 }}
+              style={{ opacity: stage.status === 0 ? 0.6 : 1, borderRadius: 8, border: '1px solid #F1F5F9', boxShadow: '0 1px 2px rgba(0,0,0,0.03)' }}
               actions={[
                 <LinkOutlined key="bind" onClick={() => handleBindPositions(stage)} title="绑定岗位" />,
                 <EditOutlined key="edit" onClick={() => handleEdit(stage)} />,
@@ -147,7 +148,7 @@ const StagePage: React.FC = () => {
                   title="确定删除该环节吗？"
                   onConfirm={() => handleDelete(stage.id)}
                 >
-                  <DeleteOutlined style={{ color: '#ff4d4f' }} />
+                  <DeleteOutlined style={{ color: '#DC2626' }} />
                 </Popconfirm>,
               ]}
             >
@@ -157,7 +158,7 @@ const StagePage: React.FC = () => {
                     width: 48,
                     height: 48,
                     borderRadius: '50%',
-                    background: stage.status === 0 ? '#d9d9d9' : '#1677ff',
+                    background: stage.status === 0 ? '#94A3B8' : '#4F46E5',
                     color: '#fff',
                     display: 'flex',
                     alignItems: 'center',
@@ -169,31 +170,31 @@ const StagePage: React.FC = () => {
                 >
                   {stage.stageSeq}
                 </div>
-                <div style={{ fontSize: 16, fontWeight: 'bold', marginBottom: 8 }}>
+                <div style={{ fontSize: 16, fontWeight: 'bold', marginBottom: 8, color: '#0F172A' }}>
                   {stage.stageName}
                   {stage.status === 0 && <Tag color="default" style={{ marginLeft: 4, fontSize: 10 }}>已禁用</Tag>}
                 </div>
-                <div style={{ color: '#999', fontSize: 12, marginBottom: 8 }}>编码：{stage.stageCode}</div>
+                <div style={{ color: '#94A3B8', fontSize: 12, marginBottom: 8 }}>编码：{stage.stageCode}</div>
                 <div style={{ display: 'flex', justifyContent: 'center', gap: 8, flexWrap: 'wrap' }}>
                   {stage.needQc === 1 && (
-                    <span style={{ color: '#1677ff', fontSize: 12 }}>
+                    <span style={{ color: '#4F46E5', fontSize: 12 }}>
                       <CheckCircleOutlined /> 需质检
                     </span>
                   )}
                   {stage.needPhoto === 1 && (
-                    <span style={{ color: '#52c41a', fontSize: 12 }}>
+                    <span style={{ color: '#059669', fontSize: 12 }}>
                       <CameraOutlined /> 需拍照
                     </span>
                   )}
                   {stage.needQc !== 1 && stage.needPhoto !== 1 && (
-                    <span style={{ color: '#999', fontSize: 12 }}>无需质检/拍照</span>
+                    <span style={{ color: '#94A3B8', fontSize: 12 }}>无需质检/拍照</span>
                   )}
                 </div>
                 {stage.estimatedHours > 0 && (
-                  <div style={{ color: '#666', fontSize: 12, marginTop: 4 }}>预估工时：{stage.estimatedHours}h</div>
+                  <div style={{ color: '#475569', fontSize: 12, marginTop: 4 }}>预估工时：{stage.estimatedHours}h</div>
                 )}
                 {stage.description && (
-                  <div style={{ color: '#666', fontSize: 12, marginTop: 8 }}>{stage.description}</div>
+                  <div style={{ color: '#475569', fontSize: 12, marginTop: 8 }}>{stage.description}</div>
                 )}
               </div>
             </Card>
@@ -201,7 +202,7 @@ const StagePage: React.FC = () => {
         ))}
         {stages.length === 0 && (
           <Col span={24}>
-            <div style={{ textAlign: 'center', padding: 40, color: '#999' }}>暂无环节，请点击右上角新增</div>
+            <div style={{ textAlign: 'center', padding: 40, color: '#94A3B8' }}>暂无环节，请点击右上角新增</div>
           </Col>
         )}
       </Row>
@@ -248,7 +249,7 @@ const StagePage: React.FC = () => {
         onCancel={() => setBindModalOpen(false)}
         width={520}
       >
-        <div style={{ marginBottom: 12, color: '#666' }}>选择该环节需要由哪些岗位来执行：</div>
+        <div style={{ marginBottom: 12, color: '#475569' }}>选择该环节需要由哪些岗位来执行：</div>
         <Select
           mode="multiple"
           placeholder="请选择岗位"

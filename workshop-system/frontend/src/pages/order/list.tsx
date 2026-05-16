@@ -13,9 +13,9 @@ import dayjs from 'dayjs';
 
 const statusMap: Record<number, { label: string; color: string }> = {
   0: { label: '待确认', color: 'default' },
-  1: { label: '生产中', color: 'processing' },
-  2: { label: '已完成', color: 'success' },
-  3: { label: '已取消', color: 'error' },
+  1: { label: '生产中', color: '#4F46E5' },
+  2: { label: '已完成', color: '#059669' },
+  3: { label: '已取消', color: '#DC2626' },
 };
 
 const nextStatusMap: Record<number, { label: string; value: number } | null> = {
@@ -122,6 +122,7 @@ const OrderListPage: React.FC = () => {
               size="small"
               icon={<EyeOutlined />}
               onClick={() => handleView(record)}
+              style={{ color: '#475569' }}
             >
               查看
             </Button>
@@ -131,6 +132,7 @@ const OrderListPage: React.FC = () => {
                 size="small"
                 icon={<EditOutlined />}
                 onClick={() => handleEdit(record)}
+                style={{ color: '#4F46E5' }}
               >
                 编辑
               </Button>
@@ -144,7 +146,7 @@ const OrderListPage: React.FC = () => {
                   refreshList();
                 }}
               >
-                <Button type="link" size="small" style={{ color: '#52c41a' }}>
+                <Button type="link" size="small" style={{ color: '#059669', fontWeight: 500 }}>
                   {nextStatus.label}
                 </Button>
               </Popconfirm>

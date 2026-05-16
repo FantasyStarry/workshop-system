@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Outlet, useNavigate, useLocation } from 'react-router-dom';
-import { Layout, Menu, Button, Avatar, Dropdown, Space, Typography } from 'antd';
+import { Layout, Menu, Button, Avatar, Dropdown, Space, Typography, Tooltip } from 'antd';
 import {
   HomeOutlined,
   FileTextOutlined,
@@ -28,19 +28,20 @@ interface MenuItem {
   icon: React.ReactNode;
   label: string;
   roles?: string[];
+  group?: string;
 }
 
 const menuItems: MenuItem[] = [
-  { key: '/', icon: <HomeOutlined />, label: '仪表盘' },
-  { key: '/orders', icon: <FileTextOutlined />, label: '订单管理' },
-  { key: '/products', icon: <ProductOutlined />, label: '产品库' },
-  { key: '/stages', icon: <NodeIndexOutlined />, label: '环节管理' },
-  { key: '/qrcodes', icon: <QrcodeOutlined />, label: '二维码管理' },
-  { key: '/progress', icon: <LineChartOutlined />, label: '进度追踪' },
-  { key: '/users', icon: <UserOutlined />, label: '用户管理', roles: ['admin'] },
-  { key: '/depts', icon: <ApartmentOutlined />, label: '部门管理', roles: ['admin'] },
-  { key: '/positions', icon: <TeamOutlined />, label: '岗位管理', roles: ['admin'] },
-  { key: '/roles', icon: <SafetyOutlined />, label: '角色管理', roles: ['admin'] },
+  { key: '/', icon: <HomeOutlined />, label: '仪表盘', group: '概览' },
+  { key: '/orders', icon: <FileTextOutlined />, label: '订单管理', group: '业务' },
+  { key: '/products', icon: <ProductOutlined />, label: '产品库', group: '业务' },
+  { key: '/stages', icon: <NodeIndexOutlined />, label: '环节管理', group: '业务' },
+  { key: '/qrcodes', icon: <QrcodeOutlined />, label: '二维码管理', group: '业务' },
+  { key: '/progress', icon: <LineChartOutlined />, label: '进度追踪', group: '业务' },
+  { key: '/users', icon: <UserOutlined />, label: '用户管理', roles: ['admin'], group: '系统' },
+  { key: '/depts', icon: <ApartmentOutlined />, label: '部门管理', roles: ['admin'], group: '系统' },
+  { key: '/positions', icon: <TeamOutlined />, label: '岗位管理', roles: ['admin'], group: '系统' },
+  { key: '/roles', icon: <SafetyOutlined />, label: '角色管理', roles: ['admin'], group: '系统' },
 ];
 
 const MainLayout: React.FC = () => {
@@ -73,6 +74,7 @@ const MainLayout: React.FC = () => {
       key: 'logout',
       icon: <LogoutOutlined />,
       label: '退出登录',
+      danger: true,
       onClick: () => {
         logout();
         navigate('/login');
@@ -80,16 +82,15 @@ const MainLayout: React.FC = () => {
     },
   ];
 
-  const sidebarWidth = collapsed ? 80 : 240;
+  const sidebarWidth = collapsed ? 72 : 248;
 
   return (
-    <Layout style={{ minHeight: '100vh', background: '#f5f7fa' }}>
-      {/* ── Sidebar ── */}
+    <Layout style={{ minHeight: '100vh', background: 'var(--bg-page)' }}>
       <Sider
         trigger={null}
         collapsible
         collapsed={collapsed}
-        width={240}
+        width={248}
         style={{
           overflow: 'auto',
           height: '100vh',
@@ -98,121 +99,103 @@ const MainLayout: React.FC = () => {
           top: 0,
           bottom: 0,
           zIndex: 10,
-          background: '#1e293b',
+          background: '#0F172A',
+          borderRight: '1px solid rgba(255,255,255,0.04)',
         }}
       >
-        {/* Logo / Brand */}
-        <div
-          style={{
-            height: 64,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            gap: 10,
-            borderBottom: '1px solid rgba(255,255,255,0.06)',
-            userSelect: 'none',
-          }}
-        >
-          <div
-            style={{
-              width: 32,
-              height: 32,
-              borderRadius: 8,
-              background: 'linear-gradient(135deg, #3b82f6, #2563eb)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              color: '#fff',
-              fontWeight: 700,
-              fontSize: 14,
-              flexShrink: 0,
-            }}
-          >
-            W
+        <div style={styles.logoArea}>
+          <div style={styles.logoIcon}>
+            <span style={styles.logoText}>W</span>
           </div>
           {!collapsed && (
-            <Text
-              style={{
-                color: '#f1f5f9',
-                fontSize: 17,
-                fontWeight: 600,
-                letterSpacing: 0.5,
-                whiteSpace: 'nowrap',
-              }}
-            >
-              车间管理
-            </Text>
+            <div style={styles.logoInfo}>
+              <Text style={styles.logoTitle}>车间管理</Text>
+              <Text style={styles.logoSub}>Workshop</Text>
+            </div>
           )}
         </div>
 
-        {/* Navigation */}
-        <Menu
-          theme="dark"
-          mode="inline"
-          selectedKeys={selectedKeys}
-          items={filteredMenuItems}
-          onClick={({ key }) => navigate(key)}
-          style={{
-            background: 'transparent',
-            borderRight: 'none',
-            paddingTop: 8,
-          }}
-        />
+        <div style={styles.menuWrapper}>
+          <Menu
+            theme="dark"
+            mode="inline"
+            selectedKeys={selectedKeys}
+            items={filteredMenuItems}
+            onClick={({ key }) => navigate(key)}
+            style={{
+              background: 'transparent',
+              borderRight: 'none',
+              padding: '8px 12px',
+            }}
+          />
+        </div>
       </Sider>
 
-      {/* ── Main Area ── */}
-      <Layout style={{ marginLeft: sidebarWidth, transition: 'margin-left 0.2s cubic-bezier(0.4, 0, 0.2, 1)' }}>
-        {/* Header */}
+      <Layout style={{ marginLeft: sidebarWidth, transition: 'margin-left 200ms cubic-bezier(0.4, 0, 0.2, 1)' }}>
         <Header
           style={{
-            padding: '0 24px',
-            background: '#fff',
+            padding: '0 28px',
+            background: '#FFFFFF',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'space-between',
-            height: 64,
+            height: 60,
             position: 'sticky',
             top: 0,
             zIndex: 9,
-            borderBottom: '1px solid #f1f5f9',
+            borderBottom: '1px solid #F1F5F9',
+            boxShadow: '0 1px 3px rgba(0,0,0,0.02)',
           }}
         >
-          <Button
-            type="text"
-            icon={collapsed ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />}
-            onClick={() => setCollapsed(!collapsed)}
-            style={{
-              fontSize: 18,
-              width: 40,
-              height: 40,
-              color: '#64748b',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-            }}
-          />
+          <Tooltip title={collapsed ? '展开菜单' : '收起菜单'} placement="right">
+            <Button
+              type="text"
+              icon={collapsed ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />}
+              onClick={() => setCollapsed(!collapsed)}
+              style={{
+                fontSize: 16,
+                width: 36,
+                height: 36,
+                color: '#64748B',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                borderRadius: 8,
+              }}
+            />
+          </Tooltip>
 
-          <Dropdown menu={{ items: userMenuItems }} placement="bottomRight">
-            <Space style={{ cursor: 'pointer', padding: '4px 8px', borderRadius: 8 }} size={10}>
+          <Dropdown menu={{ items: userMenuItems }} placement="bottomRight" trigger={['click']}>
+            <Space
+              style={{
+                cursor: 'pointer',
+                padding: '6px 12px',
+                borderRadius: 10,
+                transition: 'background 150ms',
+              }}
+              size={10}
+              className="user-dropdown-trigger"
+            >
               <Avatar
+                size={32}
                 icon={<UserOutlined />}
                 style={{
-                  backgroundColor: '#e0e7ff',
-                  color: '#4f46e5',
-                  fontWeight: 500,
+                  backgroundColor: '#EEF2FF',
+                  color: '#4F46E5',
+                  fontWeight: 600,
+                  fontSize: 14,
                 }}
               />
-              <Text style={{ color: '#374151', fontSize: 14 }}>
+              <Text style={{ color: '#334155', fontSize: 14, fontWeight: 500 }}>
                 {userInfo?.realName || userInfo?.username || '用户'}
               </Text>
             </Space>
           </Dropdown>
         </Header>
 
-        {/* Content */}
         <Content
           style={{
-            margin: 20,
+            padding: 24,
             minHeight: 280,
           }}
         >
@@ -221,6 +204,62 @@ const MainLayout: React.FC = () => {
       </Layout>
     </Layout>
   );
+};
+
+const styles: Record<string, React.CSSProperties> = {
+  logoArea: {
+    height: 60,
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 12,
+    borderBottom: '1px solid rgba(255,255,255,0.06)',
+    padding: '0 20px',
+    userSelect: 'none',
+  },
+  logoIcon: {
+    width: 34,
+    height: 34,
+    borderRadius: 10,
+    background: 'linear-gradient(135deg, #4F46E5, #818CF8)',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    flexShrink: 0,
+    boxShadow: '0 4px 12px rgba(79, 70, 229, 0.3)',
+  },
+  logoText: {
+    color: '#FFFFFF',
+    fontWeight: 700,
+    fontSize: 15,
+    letterSpacing: '-0.5px',
+  },
+  logoInfo: {
+    display: 'flex',
+    flexDirection: 'column',
+    overflow: 'hidden',
+  },
+  logoTitle: {
+    color: '#F1F5F9',
+    fontSize: 16,
+    fontWeight: 600,
+    letterSpacing: '0.3px',
+    lineHeight: 1.3,
+    whiteSpace: 'nowrap',
+  },
+  logoSub: {
+    color: '#475569',
+    fontSize: 11,
+    fontWeight: 400,
+    letterSpacing: '1px',
+    lineHeight: 1.2,
+    whiteSpace: 'nowrap',
+  },
+  menuWrapper: {
+    flex: 1,
+    overflow: 'auto',
+    paddingTop: 4,
+  },
 };
 
 export default MainLayout;
