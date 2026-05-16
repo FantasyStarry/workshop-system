@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Outlet, useNavigate, useLocation } from 'react-router-dom';
-import { Layout, Menu, Button, Avatar, Dropdown, theme } from 'antd';
+import { Layout, Menu, Button, Avatar, Dropdown, Space, Typography } from 'antd';
 import {
   HomeOutlined,
   FileTextOutlined,
@@ -21,6 +21,7 @@ import { useUserStore } from '../store/userStore';
 import type { MenuProps } from 'antd';
 
 const { Header, Sider, Content } = Layout;
+const { Text } = Typography;
 
 interface MenuItem {
   key: string;
@@ -47,9 +48,6 @@ const MainLayout: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { userInfo, logout } = useUserStore();
-  const {
-    token: { colorBgContainer, borderRadiusLG },
-  } = theme.useToken();
 
   const isAdmin = userInfo?.roleCodes?.includes('ADMIN') || userInfo?.roleIds === '1';
 
@@ -82,14 +80,16 @@ const MainLayout: React.FC = () => {
     },
   ];
 
+  const sidebarWidth = collapsed ? 80 : 240;
+
   return (
-    <Layout style={{ minHeight: '100vh' }}>
+    <Layout style={{ minHeight: '100vh', background: '#f5f7fa' }}>
+      {/* ── Sidebar ── */}
       <Sider
         trigger={null}
         collapsible
         collapsed={collapsed}
-        theme="dark"
-        width={220}
+        width={240}
         style={{
           overflow: 'auto',
           height: '100vh',
@@ -98,63 +98,121 @@ const MainLayout: React.FC = () => {
           top: 0,
           bottom: 0,
           zIndex: 10,
+          background: '#1e293b',
         }}
       >
+        {/* Logo / Brand */}
         <div
           style={{
             height: 64,
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            color: '#fff',
-            fontSize: collapsed ? 16 : 20,
-            fontWeight: 'bold',
-            borderBottom: '1px solid rgba(255,255,255,0.1)',
+            gap: 10,
+            borderBottom: '1px solid rgba(255,255,255,0.06)',
+            userSelect: 'none',
           }}
         >
-          {collapsed ? '车间' : '车间管理系统'}
+          <div
+            style={{
+              width: 32,
+              height: 32,
+              borderRadius: 8,
+              background: 'linear-gradient(135deg, #3b82f6, #2563eb)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              color: '#fff',
+              fontWeight: 700,
+              fontSize: 14,
+              flexShrink: 0,
+            }}
+          >
+            W
+          </div>
+          {!collapsed && (
+            <Text
+              style={{
+                color: '#f1f5f9',
+                fontSize: 17,
+                fontWeight: 600,
+                letterSpacing: 0.5,
+                whiteSpace: 'nowrap',
+              }}
+            >
+              车间管理
+            </Text>
+          )}
         </div>
+
+        {/* Navigation */}
         <Menu
           theme="dark"
           mode="inline"
           selectedKeys={selectedKeys}
           items={filteredMenuItems}
           onClick={({ key }) => navigate(key)}
+          style={{
+            background: 'transparent',
+            borderRight: 'none',
+            paddingTop: 8,
+          }}
         />
       </Sider>
-      <Layout style={{ marginLeft: collapsed ? 80 : 220, transition: 'all 0.2s' }}>
+
+      {/* ── Main Area ── */}
+      <Layout style={{ marginLeft: sidebarWidth, transition: 'margin-left 0.2s cubic-bezier(0.4, 0, 0.2, 1)' }}>
+        {/* Header */}
         <Header
           style={{
             padding: '0 24px',
-            background: colorBgContainer,
+            background: '#fff',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'space-between',
-            boxShadow: '0 1px 4px rgba(0,0,0,0.08)',
+            height: 64,
             position: 'sticky',
             top: 0,
             zIndex: 9,
+            borderBottom: '1px solid #f1f5f9',
           }}
         >
           <Button
             type="text"
             icon={collapsed ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />}
             onClick={() => setCollapsed(!collapsed)}
-            style={{ fontSize: 16, width: 48, height: 48 }}
+            style={{
+              fontSize: 18,
+              width: 40,
+              height: 40,
+              color: '#64748b',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}
           />
+
           <Dropdown menu={{ items: userMenuItems }} placement="bottomRight">
-            <div style={{ display: 'flex', alignItems: 'center', cursor: 'pointer', gap: 8 }}>
-              <Avatar icon={<UserOutlined />} style={{ backgroundColor: '#1677ff' }} />
-              <span>{userInfo?.realName || userInfo?.username || '用户'}</span>
-            </div>
+            <Space style={{ cursor: 'pointer', padding: '4px 8px', borderRadius: 8 }} size={10}>
+              <Avatar
+                icon={<UserOutlined />}
+                style={{
+                  backgroundColor: '#e0e7ff',
+                  color: '#4f46e5',
+                  fontWeight: 500,
+                }}
+              />
+              <Text style={{ color: '#374151', fontSize: 14 }}>
+                {userInfo?.realName || userInfo?.username || '用户'}
+              </Text>
+            </Space>
           </Dropdown>
         </Header>
+
+        {/* Content */}
         <Content
           style={{
-            margin: 16,
-            padding: 24,
-            background: colorBgContainer,
-            borderRadius: borderRadiusLG,
+            margin: 20,
             minHeight: 280,
           }}
         >
