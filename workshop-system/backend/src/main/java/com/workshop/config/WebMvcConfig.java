@@ -22,12 +22,12 @@ public class WebMvcConfig implements WebMvcConfigurer {
         // 第 1 层：JWT 认证（提取 userId + roleCodes）
         registry.addInterceptor(jwtInterceptor)
                 .addPathPatterns("/api/**")
-                .excludePathPatterns("/api/auth/login", "/api/qrcode/*/image", "/api/wx/**");
+                .excludePathPatterns("/api/auth/login", "/api/auth/public-key", "/api/qrcode/*/image", "/api/wx/**");
 
         // 第 2 层：角色权限校验（读取 @RequireRoles 注解）
         registry.addInterceptor(roleCheckInterceptor)
                 .addPathPatterns("/api/**")
-                .excludePathPatterns("/api/auth/login", "/api/qrcode/*/image", "/api/wx/**");
+                .excludePathPatterns("/api/auth/login", "/api/auth/public-key", "/api/qrcode/*/image", "/api/wx/**");
     }
 
     @Override

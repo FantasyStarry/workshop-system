@@ -1,8 +1,8 @@
 package com.workshop.common.utils;
 
+import io.ebean.uuidv7.UUIDv7;
 import org.springframework.stereotype.Component;
 
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -12,9 +12,6 @@ public class CodeGenerator {
 
     private final AtomicInteger recordSerNo = new AtomicInteger(0);
     private volatile String currentRecordMinute = "";
-
-    private final AtomicInteger orderSerNo = new AtomicInteger(0);
-    private volatile String currentOrderMinute = "";
 
     private static final DateTimeFormatter MINUTE_FORMAT = DateTimeFormatter.ofPattern("yyyyMMddHHmmss");
 
@@ -32,16 +29,10 @@ public class CodeGenerator {
     }
 
     /**
-     * Generate order number: ORD-yyyyMMdd-00001
+     * Generate order number using UUID v7, time-ordered and collision-free.
+     * Format: ORD-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
      */
-    public synchronized String generateOrderNo() {
-        String datePart = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyyMMdd"));
-        String minute = LocalDateTime.now().format(MINUTE_FORMAT);
-        if (!minute.equals(currentOrderMinute)) {
-            currentOrderMinute = minute;
-            orderSerNo.set(0);
-        }
-        int seq = orderSerNo.incrementAndGet();
-        return "ORD-" + datePart + "-" + String.format("%05d", seq);
+    public String generateOrderNo() {
+        return "ORD-" + UUIDv7.generate().toString().replace("-", "");
     }
 }

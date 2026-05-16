@@ -7,6 +7,7 @@ import com.workshop.auth.dto.WxLoginDTO;
 import com.workshop.auth.dto.WxLoginResultDTO;
 import com.workshop.common.exception.BusinessException;
 import com.workshop.common.utils.JwtUtils;
+import com.workshop.common.utils.RsaKeyManager;
 import com.workshop.module.sys.entity.SysRole;
 import com.workshop.module.sys.entity.SysUser;
 import com.workshop.module.sys.mapper.SysRoleMapper;
@@ -41,6 +42,9 @@ public class WxLoginService {
 
     @Autowired
     private JwtUtils jwtUtils;
+
+    @Autowired
+    private RsaKeyManager rsaKeyManager;
 
     @Value("${wx.appid:wx6431ff9669e85e94}")
     private String wxAppid;
@@ -88,6 +92,13 @@ public class WxLoginService {
             throw new BusinessException(400, "用户名、密码和openid不能为空");
         }
 
+        String rawPassword;
+        try {
+            rawPassword = rsaKeyManager.decrypt(dto.getPassword());
+        } catch (Exception e) {
+            throw new BusinessException(400, "密码解密失败");
+        }
+
         SysUser user = sysUserMapper.selectOne(
                 new LambdaQueryWrapper<SysUser>().eq(SysUser::getUsername, dto.getUsername())
         );
@@ -98,7 +109,7 @@ public class WxLoginService {
         if (user.getStatus() == 0) {
             throw new BusinessException(401, "账号已被禁用");
         }
-        if (!passwordEncoder.matches(dto.getPassword(), user.getPassword())) {
+        if (!passwordEncoder.matches(rawPassword, user.getPassword())) {
             throw new BusinessException(401, "用户名或密码错误");
         }
 

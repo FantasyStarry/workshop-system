@@ -1,4 +1,5 @@
-const BASE_URL = 'https://a8ca5b67.natappfree.cc/api';
+var BASE_URL = 'https://a8ca5b67.natappfree.cc/api';
+var rsaUtil = require('./rsa.js');
 
 const request = (options) => {
   const token = wx.getStorageSync('token');
@@ -50,11 +51,17 @@ const authApi = {
     });
   },
   bind: (data) => {
-    return request({
-      url: '/wx/bind',
-      method: 'POST',
-      data,
-      timeout: 15000
+    return rsaUtil.encryptPasswordAsync(data.password).then(function (encryptedPassword) {
+      return request({
+        url: '/wx/bind',
+        method: 'POST',
+        data: {
+          username: data.username,
+          password: encryptedPassword,
+          wxOpenid: data.wxOpenid
+        },
+        timeout: 15000
+      });
     });
   }
 };

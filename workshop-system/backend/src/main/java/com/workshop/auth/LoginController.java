@@ -4,6 +4,7 @@ import com.workshop.auth.dto.LoginDTO;
 import com.workshop.auth.dto.LoginResultDTO;
 import com.workshop.common.exception.BusinessException;
 import com.workshop.common.result.Result;
+import com.workshop.common.utils.RsaKeyManager;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
@@ -16,6 +17,14 @@ public class LoginController {
 
     @Autowired
     private LoginService loginService;
+
+    @Autowired
+    private RsaKeyManager rsaKeyManager;
+
+    @GetMapping("/public-key")
+    public Result<Map<String, String>> getPublicKey() {
+        return Result.ok(Map.of("publicKey", rsaKeyManager.getPublicKeyBase64()));
+    }
 
     @PostMapping("/login")
     public Result<LoginResultDTO> login(@RequestBody LoginDTO dto) {

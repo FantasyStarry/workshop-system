@@ -3,6 +3,7 @@ package com.workshop.module.sys.service.impl;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.workshop.common.exception.BusinessException;
+import com.workshop.common.utils.RsaKeyManager;
 import com.workshop.module.sys.dto.SysUserCreateDTO;
 import com.workshop.module.sys.dto.SysUserPageDTO;
 import com.workshop.module.sys.entity.SysUser;
@@ -22,6 +23,9 @@ public class SysUserServiceImpl implements SysUserService {
 
     @Autowired
     private BCryptPasswordEncoder passwordEncoder;
+
+    @Autowired
+    private RsaKeyManager rsaKeyManager;
 
     @Override
     public Page<SysUser> pageQuery(Page<SysUser> page, SysUserPageDTO dto) {
@@ -63,7 +67,13 @@ public class SysUserServiceImpl implements SysUserService {
 
         SysUser user = new SysUser();
         BeanUtils.copyProperties(dto, user);
-        user.setPassword(passwordEncoder.encode(dto.getPassword()));
+        String rawPassword;
+        try {
+            rawPassword = rsaKeyManager.decrypt(dto.getPassword());
+        } catch (Exception e) {
+            throw new BusinessException(400, "密码解密失败");
+        }
+        user.setPassword(passwordEncoder.encode(rawPassword));
         user.setStatus(1);
 
         sysUserMapper.insert(user);
@@ -90,7 +100,13 @@ public class SysUserServiceImpl implements SysUserService {
         if (!StringUtils.hasText(user.getPassword())) {
             user.setPassword(existing.getPassword());
         } else {
-            user.setPassword(passwordEncoder.encode(user.getPassword()));
+            String rawPassword;
+            try {
+                rawPassword = rsaKeyManager.decrypt(user.getPassword());
+            } catch (Exception e) {
+                throw new BusinessException(400, "密码解密失败");
+            }
+            user.setPassword(passwordEncoder.encode(rawPassword));
         }
 
         sysUserMapper.updateById(user);

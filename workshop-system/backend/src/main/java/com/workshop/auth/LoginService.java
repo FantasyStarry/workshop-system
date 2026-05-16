@@ -5,6 +5,7 @@ import com.workshop.auth.dto.LoginDTO;
 import com.workshop.auth.dto.LoginResultDTO;
 import com.workshop.common.exception.BusinessException;
 import com.workshop.common.utils.JwtUtils;
+import com.workshop.common.utils.RsaKeyManager;
 import com.workshop.module.sys.entity.SysRole;
 import com.workshop.module.sys.entity.SysUser;
 import com.workshop.module.sys.mapper.SysRoleMapper;
@@ -33,9 +34,19 @@ public class LoginService {
     @Autowired
     private JwtUtils jwtUtils;
 
+    @Autowired
+    private RsaKeyManager rsaKeyManager;
+
     public LoginResultDTO login(LoginDTO dto) {
         if (dto.getUsername() == null || dto.getPassword() == null) {
             throw new BusinessException(400, "用户名和密码不能为空");
+        }
+
+        String rawPassword;
+        try {
+            rawPassword = rsaKeyManager.decrypt(dto.getPassword());
+        } catch (Exception e) {
+            throw new BusinessException(400, "密码解密失败");
         }
 
         SysUser user = sysUserMapper.selectOne(
@@ -47,7 +58,7 @@ public class LoginService {
         if (user.getStatus() == 0) {
             throw new BusinessException(401, "账号已被禁用");
         }
-        if (!passwordEncoder.matches(dto.getPassword(), user.getPassword())) {
+        if (!passwordEncoder.matches(rawPassword, user.getPassword())) {
             throw new BusinessException(401, "用户名或密码错误");
         }
 
@@ -90,15 +101,24 @@ public class LoginService {
             throw new BusinessException(400, "旧密码和新密码不能为空");
         }
 
+        String rawOldPassword;
+        String rawNewPassword;
+        try {
+            rawOldPassword = rsaKeyManager.decrypt(oldPassword);
+            rawNewPassword = rsaKeyManager.decrypt(newPassword);
+        } catch (Exception e) {
+            throw new BusinessException(400, "密码解密失败");
+        }
+
         SysUser user = sysUserMapper.selectById(userId);
         if (user == null) {
             throw new BusinessException(404, "用户不存在");
         }
-        if (!passwordEncoder.matches(oldPassword, user.getPassword())) {
+        if (!passwordEncoder.matches(rawOldPassword, user.getPassword())) {
             throw new BusinessException(400, "旧密码错误");
         }
 
-        user.setPassword(passwordEncoder.encode(newPassword));
+        user.setPassword(passwordEncoder.encode(rawNewPassword));
         sysUserMapper.updateById(user);
     }
 
