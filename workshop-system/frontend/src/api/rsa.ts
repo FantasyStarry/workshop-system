@@ -1,7 +1,13 @@
 import request from './request';
 import JSEncrypt from 'jsencrypt';
 
-let cachedPublicKey: string | null = null;
+interface CachedKey {
+  key: string;
+  timestamp: number;
+}
+
+let cachedKey: CachedKey | null = null;
+const KEY_CACHE_DURATION = 24 * 60 * 60 * 1000; // 24小时
 
 function toPemFormat(rawBase64: string): string {
   if (rawBase64.includes('-----BEGIN')) {
@@ -11,12 +17,19 @@ function toPemFormat(rawBase64: string): string {
 }
 
 export async function getPublicKey(): Promise<string> {
-  if (cachedPublicKey) {
-    return cachedPublicKey;
+  const now = Date.now();
+
+  if (cachedKey && (now - cachedKey.timestamp) < KEY_CACHE_DURATION) {
+    return cachedKey.key;
   }
+
   const res = await request.get('/auth/public-key');
-  cachedPublicKey = toPemFormat(res.data.data.publicKey);
-  return cachedPublicKey!;
+  cachedKey = {
+    key: toPemFormat(res.data.data.publicKey),
+    timestamp: now,
+  };
+
+  return cachedKey.key;
 }
 
 export function encryptPassword(password: string, publicKey: string): string {
@@ -33,3 +46,4 @@ export async function encryptPasswordAsync(password: string): Promise<string> {
   const publicKey = await getPublicKey();
   return encryptPassword(password, publicKey);
 }
+

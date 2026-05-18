@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Tag, Button, Popconfirm, message, Space } from 'antd';
 import { PlusOutlined, EyeOutlined, EditOutlined, CheckCircleOutlined, StopOutlined } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
@@ -6,6 +6,8 @@ import ProTable from '../../components/ProTable';
 import type { SearchColumn } from '../../components/ProTable';
 import { getProductPage, deleteProduct, updateProductStatus } from '../../api/product';
 import type { Product } from '../../types/product';
+import { useUserStore } from '../../store/userStore';
+import { hasAnyRole } from '../../utils/permission';
 
 const statusMap: Record<number, { label: string; color: string }> = {
   0: { label: '禁用', color: 'default' },
@@ -30,6 +32,30 @@ const searchColumns: SearchColumn[] = [
 
 const ProductListPage: React.FC = () => {
   const navigate = useNavigate();
+  const roleCodes = useUserStore((s) => s.userInfo?.roleCodes || '');
+  const canManage = hasAnyRole(roleCodes, ['SALES', 'ADMIN']);
+  const canDelete = hasAnyRole(roleCodes, ['ADMIN']);
+  const [refreshKey, setRefreshKey] = useState(0);
+
+  const handleStatusChange = async (record: Product, newStatus: number, action: string) => {
+    try {
+      await updateProductStatus(record.id, newStatus);
+      message.success(`已${action}`);
+      setRefreshKey(k => k + 1);
+    } catch {
+      message.error(`${action}失败，请重试`);
+    }
+  };
+
+  const handleDelete = async (record: Product) => {
+    try {
+      await deleteProduct(record.id);
+      message.success('删除成功');
+      setRefreshKey(k => k + 1);
+    } catch {
+      message.error('删除失败，请重试');
+    }
+  };
 
   const columns = [
     { title: '产品编号', dataIndex: 'productCode', key: 'productCode', width: 140 },
@@ -73,11 +99,7 @@ const ProductListPage: React.FC = () => {
           {record.status === 1 ? (
             <Popconfirm
               title="确定停用该产品吗？"
-              onConfirm={async () => {
-                await updateProductStatus(record.id, 0);
-                message.success('已停用');
-                window.location.reload();
-              }}
+              onConfirm={() => handleStatusChange(record, 0, '停用')}
             >
               <Button type="link" size="small" icon={<StopOutlined />} style={{ color: '#94A3B8' }}>
                 停用
@@ -86,29 +108,23 @@ const ProductListPage: React.FC = () => {
           ) : (
             <Popconfirm
               title="确定启用该产品吗？"
-              onConfirm={async () => {
-                await updateProductStatus(record.id, 1);
-                message.success('已启用');
-                window.location.reload();
-              }}
+              onConfirm={() => handleStatusChange(record, 1, '启用')}
             >
               <Button type="link" size="small" icon={<CheckCircleOutlined />} style={{ color: '#059669' }}>
                 启用
               </Button>
             </Popconfirm>
           )}
-          <Popconfirm
-            title="确定删除该产品吗？"
-            onConfirm={async () => {
-              await deleteProduct(record.id);
-              message.success('删除成功');
-              window.location.reload();
-            }}
-          >
-            <Button type="link" size="small" danger style={{ color: '#DC2626' }}>
-              删除
-            </Button>
-          </Popconfirm>
+          {canDelete && (
+            <Popconfirm
+              title="确定删除该产品吗？"
+              onConfirm={() => handleDelete(record)}
+            >
+              <Button type="link" size="small" danger style={{ color: '#DC2626' }}>
+                删除
+              </Button>
+            </Popconfirm>
+          )}
         </Space>
       ),
     },
@@ -120,10 +136,13 @@ const ProductListPage: React.FC = () => {
       fetchData={(page, pageSize, params) => getProductPage({ page, pageSize, ...params }).then((r) => r.data)}
       searchColumns={searchColumns}
       rowKey="id"
+      refreshKey={refreshKey}
       extraButtons={
-        <Button type="primary" icon={<PlusOutlined />} onClick={() => navigate('/products/new')}>
-          新增产品
-        </Button>
+        canManage ? (
+          <Button type="primary" icon={<PlusOutlined />} onClick={() => navigate('/products/new')}>
+            新增产品
+          </Button>
+        ) : undefined
       }
     />
   );

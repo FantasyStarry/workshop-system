@@ -1,27 +1,48 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import { Form, Input, Button, message } from 'antd';
 import { UserOutlined, LockOutlined } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
 import { login, getUserInfo } from '../../api/auth';
 import { useUserStore } from '../../store/userStore';
 import type { LoginParams } from '../../types/user';
+import type { ApiResult } from '../../types/api';
+
+type LoginData = {
+  token: string;
+  userId: string;
+  username: string;
+  realName: string;
+};
+
+type LoginResponse = ApiResult<LoginData>;
+
+interface UserInfoFallback {
+  id: number;
+  username: string;
+  realName: string;
+  phone: string;
+  deptId: number;
+  deptName: string;
+  roleIds: string;
+  roleCodes: string;
+}
 
 const LoginPage: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
   const { setToken, setUserInfo } = useUserStore();
 
-  const onFinish = async (values: LoginParams) => {
+  const onFinish = useCallback(async (values: LoginParams) => {
     setLoading(true);
     try {
-      const res = await login(values);
+      const res = await login(values) as LoginResponse;
       setToken(res.data.token);
 
       try {
         const infoRes = await getUserInfo();
         setUserInfo(infoRes.data);
       } catch {
-        setUserInfo({
+        const fallback: UserInfoFallback = {
           id: Number(res.data.userId),
           username: res.data.username,
           realName: res.data.realName,
@@ -30,16 +51,20 @@ const LoginPage: React.FC = () => {
           deptName: '',
           roleIds: '',
           roleCodes: '',
-        });
+        };
+        setUserInfo(fallback);
       }
+
       message.success('登录成功');
       navigate('/', { replace: true });
-    } catch (error) {
+    } catch (error: any) {
       console.error('登录失败:', error);
+      const errorMessage = error?.response?.data?.message || '登录失败，请检查账号密码';
+      message.error(errorMessage);
     } finally {
       setLoading(false);
     }
-  };
+  }, [navigate, setToken, setUserInfo]);
 
   return (
     <div style={styles.container}>
@@ -89,7 +114,13 @@ const LoginPage: React.FC = () => {
                 style={styles.input}
               />
             </Form.Item>
-            <Form.Item name="password" rules={[{ required: true, message: '请输入密码' }]}>
+            <Form.Item
+              name="password"
+              rules={[
+                { required: true, message: '请输入密码' },
+                { min: 6, message: '密码至少6位' }
+              ]}
+            >
               <Input.Password
                 prefix={<LockOutlined style={{ color: '#94A3B8' }} />}
                 placeholder="密码"

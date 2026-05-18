@@ -18,6 +18,7 @@ import {
   SafetyOutlined,
 } from '@ant-design/icons';
 import { useUserStore } from '../store/userStore';
+import { isAdmin } from '../utils/permission';
 import type { MenuProps } from 'antd';
 
 const { Header, Sider, Content } = Layout;
@@ -50,10 +51,12 @@ const MainLayout: React.FC = () => {
   const location = useLocation();
   const { userInfo, logout } = useUserStore();
 
-  const isAdmin = userInfo?.roleCodes?.includes('ADMIN') || userInfo?.roleIds === '1';
+  const adminRoleCodes = userInfo?.roleCodes || '';
+  const adminUserId = userInfo?.id;
+  const isAdminUser = isAdmin(adminRoleCodes, adminUserId);
 
   const filteredMenuItems = menuItems
-    .filter((item) => !item.roles || item.roles.some((r) => isAdmin))
+    .filter((item) => !item.roles || item.roles.some((r) => isAdminUser))
     .map((item) => ({
       key: item.key,
       icon: item.icon,

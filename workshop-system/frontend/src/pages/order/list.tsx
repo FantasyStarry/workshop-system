@@ -1,7 +1,6 @@
 import React, { useMemo, useState } from 'react';
 import { Tag, Button, Popconfirm, message, Space } from 'antd';
 import { PlusOutlined, EyeOutlined, EditOutlined, DeleteOutlined } from '@ant-design/icons';
-import { useNavigate } from 'react-router-dom';
 import ProTable from '../../components/ProTable';
 import type { SearchColumn } from '../../components/ProTable';
 import { getOrderPage, deleteOrder, updateOrderStatus } from '../../api/order';
@@ -10,6 +9,7 @@ import { useUserStore } from '../../store/userStore';
 import OrderFormModal from './OrderFormModal';
 import OrderDetailModal from './OrderDetailModal';
 import dayjs from 'dayjs';
+import { hasAnyRole } from '../../utils/permission';
 
 const statusMap: Record<number, { label: string; color: string }> = {
   0: { label: '待确认', color: 'default' },
@@ -23,13 +23,6 @@ const nextStatusMap: Record<number, { label: string; value: number } | null> = {
   1: null,
   2: null,
   3: null,
-};
-
-// 角色检查工具函数
-const hasAnyRole = (roleCodes: string, roles: string[]) => {
-  if (!roleCodes) return false;
-  const userRoles = roleCodes.split(',').map((r) => r.trim());
-  return roles.some((r) => userRoles.includes(r));
 };
 
 const searchColumns: SearchColumn[] = [
@@ -50,7 +43,6 @@ const searchColumns: SearchColumn[] = [
 ];
 
 const OrderListPage: React.FC = () => {
-  const navigate = useNavigate();
   const roleCodes = useUserStore((s) => s.userInfo?.roleCodes || '');
 
   const canManage = useMemo(() => hasAnyRole(roleCodes, ['SALES', 'ADMIN']), [roleCodes]);
@@ -141,9 +133,13 @@ const OrderListPage: React.FC = () => {
               <Popconfirm
                 title={`确定${nextStatus.label}吗？`}
                 onConfirm={async () => {
-                  await updateOrderStatus(record.id, nextStatus.value);
-                  message.success('状态已更新');
-                  refreshList();
+                  try {
+                    await updateOrderStatus(record.id, nextStatus.value);
+                    message.success('状态已更新');
+                    refreshList();
+                  } catch {
+                    message.error('状态更新失败，请重试');
+                  }
                 }}
               >
                 <Button type="link" size="small" style={{ color: '#059669', fontWeight: 500 }}>
@@ -155,9 +151,13 @@ const OrderListPage: React.FC = () => {
               <Popconfirm
                 title="确定删除该订单吗？"
                 onConfirm={async () => {
-                  await deleteOrder(record.id);
-                  message.success('删除成功');
-                  refreshList();
+                  try {
+                    await deleteOrder(record.id);
+                    message.success('删除成功');
+                    refreshList();
+                  } catch {
+                    message.error('删除失败，请重试');
+                  }
                 }}
               >
                 <Button type="link" size="small" danger icon={<DeleteOutlined />}>

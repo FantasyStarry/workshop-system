@@ -134,6 +134,13 @@ const OrderFormPage: React.FC = () => {
     try {
       // 先校验表单，确保必填字段已填写
       const values = await form.validateFields();
+
+      if (selectedProducts.length === 0) {
+        message.error('请至少选择一个产品');
+        setLoading(false);
+        return;
+      }
+
       const orderData: Partial<Order> = {
         customerName: values.customerName,
         customerContact: values.customerContact,
@@ -193,7 +200,13 @@ const OrderFormPage: React.FC = () => {
           <Form.Item name="customerContact" label="联系人">
             <Input placeholder="请输入联系人" />
           </Form.Item>
-          <Form.Item name="customerPhone" label="联系电话">
+          <Form.Item
+            name="customerPhone"
+            label="联系电话"
+            rules={[
+              { pattern: /^1[3-9]\d{9}$/, message: '请输入有效的手机号' }
+            ]}
+          >
             <Input placeholder="请输入联系电话" />
           </Form.Item>
           <Form.Item name="customerAddress" label="客户地址">
