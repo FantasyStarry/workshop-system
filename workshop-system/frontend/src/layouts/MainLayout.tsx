@@ -52,8 +52,8 @@ const MainLayout: React.FC = () => {
   const { userInfo, logout } = useUserStore();
 
   const adminRoleCodes = userInfo?.roleCodes || '';
-  const adminUserId = userInfo?.id;
-  const isAdminUser = isAdmin(adminRoleCodes, adminUserId);
+  const roleIds = userInfo?.roleIds;
+  const isAdminUser = isAdmin(adminRoleCodes, roleIds);
 
   const filteredMenuItems = menuItems
     .filter((item) => !item.roles || item.roles.some((r) => isAdminUser))
